@@ -16,19 +16,6 @@ module Dust
       @selected = select('group' => 'all')
     end
   
-    def socks5 proxy={}
-      if proxy.class == Hash
-        host = proxy[:host] ? proxy[:host] : 'localhost'
-        port = proxy[:port] ? proxy[:port] : 1080
-        @proxy = "#{host}:#{port}"
-      elsif proxy.class == String
-        @proxy = proxy
-      else
-        puts "setting proxy failed."
-        return false
-      end
-    end
-  
     def select filter
       # store group and remove group from filter hash
       # default to 'all' if no group is given

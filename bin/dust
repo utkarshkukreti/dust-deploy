@@ -10,8 +10,7 @@ require 'dust'
 class Deploy < Thor::Runner
   attr_reader :servers
 
-  method_options :socks5 => :string,
-                 :yaml => :string,
+  method_options :yaml => :string,
                  :filter => :hash
 
   desc "start", "startup method, used by all tasks"
@@ -21,7 +20,6 @@ class Deploy < Thor::Runner
 
     yaml = options.yaml? ? options[:yaml] : 'servers.yaml'
     @servers = Dust::Dust.new(yaml)
-    @servers.socks5(options[:socks5]) if options.socks5?
     @servers.select(filter)
     @servers
   end
