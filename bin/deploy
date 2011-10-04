@@ -1,0 +1,43 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'yaml'
+require 'erb'
+require 'thor'
+require 'thor/runner'
+require 'dust'
+
+class Deploy < Thor::Runner
+  attr_reader :servers
+
+  method_options :socks5 => :string,
+                 :yaml => :string,
+                 :filter => :hash
+
+  desc "start", "startup method, used by all tasks"
+  def start filter = { 'group' => 'all' }
+    # set default group, if not overridden by command line
+    filter.merge!(options[:filter]) if options[:filter]
+
+    yaml = options.yaml? ? options[:yaml] : 'servers.yaml'
+    @servers = Dust::Dust.new(yaml)
+    @servers.socks5(options[:socks5]) if options.socks5?
+    @servers.select(filter)
+    @servers
+  end
+
+  desc "show", "show selected servers"
+  def show
+    servers = invoke 'start'
+    servers.each do |server|
+      puts server.attr.inspect
+    end
+  end
+
+  private
+  def thorfiles(*args)
+    Dir['recipes/*.rb']
+  end
+end
+
+Deploy.start
