@@ -37,6 +37,7 @@ class Deploy < Thor::Runner
   private
   def thorfiles(*args)
     Dir['recipes/*.rb']
+    Dir[File.dirname(__FILE__) + '/../lib/dust/recipes/*.rb']
   end
 end
 
