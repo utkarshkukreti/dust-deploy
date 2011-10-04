@@ -1,13 +1,51 @@
 class Deploy::Duplicity < Thor
   namespace :duplicity
 
-  method_options :enable => :boolean, :disable => :boolean
+  method_options :backend => :string, :generate_passphrase => :integer, :force => :boolean, # generate_config
+                 :enable => :boolean, :disable => :boolean # cronjobs
+                 
+  @@config_file = "templates/#{namespace}/configuration.yaml"
+
+  desc "#{namespace}:generate_config", 'generates basic configuration.yaml based on servers.yaml'
+  def generate_config
+    servers = invoke 'deploy:start'
+
+    if File.exists?(@@config_file) and not options.force?
+      puts "#{@@config_file} already exists, not overwriting. Use --force"
+      return -1
+    end
+
+    config_file = File.open(@@config_file, 'w+')
+
+    # get servers, but don't connect
+    servers.each connect=false do |server|
+      config_file.puts "#{server['hostname']}:"
+      config_file.puts "  hostname: #{server['hostname']}"
+      config_file.puts "  backend: \"#{options[:backend]}\"" if options[:backend]
+
+      # use pwgen to generate passphrases
+      if options[:generate_passphrase]
+        passphrase = `pwgen #{options[:generate_passphrase]}`
+        config_file.puts "  passphrase: #{passphrase}" 
+      end
+
+      config_file.puts
+    end
+
+    config_file.close
+    puts "config file written to: #{@@config_file}"
+  end
 
   desc "#{namespace}:cronjobs", 'installs duplicity and places cronjobs'
   def cronjobs
     servers = invoke 'deploy:start'
 
-    config_file = YAML.load_file("templates/#{self.class.namespace}/configuration.yaml")
+    unless File.exists?(@@config_file)
+      puts "config file #{@@config_file} not found."
+      return -1
+    end
+
+    config_file = YAML.load_file(@@config_file)
 
     servers.each do | server |
       puts "#{@@green}#{server.attr['hostname']}#{@@none}:"
