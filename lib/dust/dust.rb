@@ -4,11 +4,14 @@ require 'yaml'
 module Dust
   class Dust
     attr_reader :all, :selected,
-                :proxy
+                :proxy, :global
   
     def initialize yaml
       @all = YAML.load_file(yaml)
-  
+
+      # get global configuration, valid for all servers
+      @global = @all.delete('global')
+ 
       # select all servers by default
       @selected = select('group' => 'all')
     end
@@ -59,28 +62,29 @@ module Dust
   
     def each &block
       @selected.each do |server|
-        begin
-          # set global proxy (proxy given in yaml file will be overwritten)
-          server['proxy'] = @proxy if @proxy
-          s = Server.new(server)
-        rescue NameError
-          puts "#{@@red}ERROR:#{@@none} couldn't connect to #{server['hostname']}!\n\n"
-          next
-        end
-  
+        s = connect server
+        next unless s
         yield s
       end
     end
   
     def first
-      server = @selected.first
+      connect @selected.first
+    end
+
+    def connect server
       begin
-        # set global proxy (proxy given in yaml file will be overwritten)
+        # overwrite global attributes with attributes for this server
+        server = @global.merge(server)
+
+        # set proxy from command-line (if given)
         server['proxy'] = @proxy if @proxy
-        s = Server.new(server)
+
+        return Server.new(server)
       rescue NameError
         puts "#{@@red}ERROR:#{@@none} couldn't connect to #{server['hostname']}!\n\n"
-      end    
+        return false
+      end
     end
   end
 end
