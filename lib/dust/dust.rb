@@ -47,11 +47,15 @@ module Dust
       @selected
     end
   
-    def each &block
+    def each connect=true, &block
       @selected.each do |server|
-        s = connect server
-        next unless s
-        yield s
+        if connect
+          s = connect server
+          next unless s
+          yield s
+        else
+          yield server
+        end
       end
     end
   
