@@ -60,7 +60,7 @@ class Deploy::Duplicity < Thor
       server.install('duplicity') unless server.package_installed?('duplicity')
 
       scenarios.each do |title, scenario_config|
-        print " - deploying #{title}"
+        puts " - deploying #{title}"
 
         config = merge_with_defaults(scenario_config, server)
 
@@ -73,7 +73,11 @@ class Deploy::Duplicity < Thor
 
         # check whether we need ncftp
         if config['backend'].include?('ftp://')
-          server.install('ncftp') unless server.package_installed?('ncftp')
+          print '  '
+          unless server.package_installed?('ncftp')
+            print '  '
+            server.install('ncftp')
+          end
         end
 
         # check if interval is correct   
@@ -85,18 +89,30 @@ class Deploy::Duplicity < Thor
 
         # adjust and upload duplicity.include
         template = ERB.new( File.read("templates/#{self.class.namespace}/cronjob.erb"), nil, '%<>' )
-        print " - adjusting and deploying cronjob (#{config['interval']})"
+        print "   - adjusting and deploying cronjob (#{config['interval']})"
         server.write("/etc/cron.#{config['interval']}/duplicity-#{title}", template.result(binding), true )
         server.print_result true
 
         # if the backup directory is shared, don't enable backup script automatically 
         unless config['shared_dir']
-          server.chmod '0700', "/etc/cron.#{config['interval']}/duplicity-#{title}" unless options.disable?
+          unless options.disable?
+            print '  '
+            server.chmod '0700', "/etc/cron.#{config['interval']}/duplicity-#{title}"
+          end
         else
-          server.chmod '0700', "/etc/cron.#{config['interval']}/duplicity-#{title}" if options.enable?
-          server.print_warning('   - this scenario uses a shared backup dir, thus not enabling cronjob automatically, use --enable')
+          if options.enable?
+            print '  '
+            server.chmod '0700', "/etc/cron.#{config['interval']}/duplicity-#{title}"
+          end
+
+          server.print_warning('   - this scenario uses a shared backup dir, ' + 
+                               'thus not enabling cronjob automatically, use --enable')
         end
-        server.chmod '0600', "/etc/cron.#{config['interval']}/duplicity-#{title}" if options.disable?
+       
+        if options.disable?
+          print '  '
+          server.chmod '0600', "/etc/cron.#{config['interval']}/duplicity-#{title}"
+        end
       end
 
       server.disconnect    
