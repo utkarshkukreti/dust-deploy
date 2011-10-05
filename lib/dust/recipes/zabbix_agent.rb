@@ -6,7 +6,7 @@ class Deploy::ZabbixAgent < Thor
     servers = invoke 'deploy:start'
 
     servers.each do | server |
-      puts "#{@@green}#{server.attr['hostname']}#{@@none}:"
+      Dust.print_hostname server
 
       os = server.discover_os
       os = 'debian' if os == 'ubuntu' # treat ubuntu as debian
@@ -26,7 +26,7 @@ class Deploy::ZabbixAgent < Thor
 
       else
         print ' - os not supported'
-        print_result false
+        Dust.print_false
         next
       end
 
@@ -34,7 +34,7 @@ class Deploy::ZabbixAgent < Thor
       template = ERB.new( File.read("templates/#{self.class.namespace}/zabbix_agentd.conf.erb"), nil, '%<>' )
       print ' - adjusting and deploying zabbix_agentd.conf'
       server.write('/etc/zabbix/zabbix_agentd.conf', template.result(binding), true )
-      server.print_result true
+      Dust.print_ok
 
       # restart using new configuration
       server.restart_service('zabbix-agentd') if os == 'gentoo'
@@ -50,27 +50,27 @@ class Deploy::ZabbixAgent < Thor
     servers = invoke 'deploy:start', [ 'group' => 'postgres' ]
 
     servers.each do | server |
-      puts "#{@@green}#{server.attr['hostname']}#{@@none}:"
+      Dust.print_hostname server
       next unless server.is_gentoo?
       next unless server.package_installed?('postgresql-server')
 
       print ' - add zabbix system user to postgres group'
-      server.print_result( server.exec('usermod -a -G postgres zabbix')[:exit_code] )
+      Dust.print_result( server.exec('usermod -a -G postgres zabbix')[:exit_code] )
 
       print ' - checking if zabbix user exists in postgres'
-      ret = server.print_result( server.exec('psql -U postgres -c ' +
+      ret = Dust.print_result( server.exec('psql -U postgres -c ' +
                                              '  "SELECT usename FROM pg_user WHERE usename = \'zabbix\'"' +
                                              '  postgres |grep -q zabbix')[:exit_code] )
 
       # if user was not found, create him
       unless ret
         print '   - create zabbix user in postgres'
-        server.print_result( server.exec('createuser -U postgres zabbix -RSD')[:exit_code] )
+        Dust.print_result( server.exec('createuser -U postgres zabbix -RSD')[:exit_code] )
       end
 
 # TODO: only GRANT is this is a master
       print ' - GRANT zabbix user access to postgres database'
-      server.print_result( server.exec('psql -U postgres -c "GRANT SELECT ON pg_stat_database TO zabbix" postgres')[:exit_code] )
+      Dust.print_result( server.exec('psql -U postgres -c "GRANT SELECT ON pg_stat_database TO zabbix" postgres')[:exit_code] )
 
       # reload postgresql
       server.reload_service('postgresql-9.0')

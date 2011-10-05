@@ -2,11 +2,12 @@ require 'rubygems'
 require 'yaml'
   
 module Dust
-  class Dust
+  class Servers
     attr_reader :all, :selected,
                 :proxy, :global
   
     def initialize yaml
+      # load server configuration
       @all = YAML.load_file(yaml)
 
       # get global configuration, valid for all servers

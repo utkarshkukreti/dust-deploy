@@ -6,7 +6,7 @@ class Deploy::Nginx < Thor
     servers = invoke 'deploy:start', [ 'group' => 'proxy' ]
 
     servers.each do | server |
-      puts "#{@@green}#{server.attr['hostname']}#{@@none}:"    
+      Dust.print_hostname server
 
       deploy_config server, 'proxy'
       check_config server
@@ -21,7 +21,7 @@ class Deploy::Nginx < Thor
     servers = invoke 'deploy:start', [ 'group' => 'rails' ]
 
     servers.each do | server |
-      puts "#{@@green}#{server.attr['hostname']}#{@@none}:"
+      Dust.print_hostname server
 
       deploy_config server, 'rails'
       check_config server
@@ -44,12 +44,12 @@ class Deploy::Nginx < Thor
     template = ERB.new( File.read("templates/#{self.class.namespace}/#{type}/proxy.erb"), nil, '%<>' )
     print ' - writing proxy according to template'
     server.write('/etc/nginx/sites-available/proxy', template.result(binding), true )
-    server.print_result true
+    Dust.print_ok
 
     # enable server configuration via symlink
     unless server.file_exists?('/etc/nginx/sites-enabled/proxy')
       print '   - symlinking proxy to sites-enabled'
-      server.print_result( server.exec('cd /etc/nginx/sites-enabled && ln -s ../sites-available/proxy proxy')[:exit_code] )
+      Dust.print_result( server.exec('cd /etc/nginx/sites-enabled && ln -s ../sites-available/proxy proxy')[:exit_code] )
     end
   end
 
@@ -57,10 +57,10 @@ class Deploy::Nginx < Thor
     # check configuration and restart nginx
     print ' - checking nginx configuration'
     if server.exec('/etc/init.d/nginx configtest')[:exit_code] == 0
-      server.print_result true
+      Dust.print_ok
       server.restart_service('nginx')
     else
-      server.print_result false
+      Dust.print_false
     end
   end
 end

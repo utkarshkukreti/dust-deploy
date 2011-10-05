@@ -4,15 +4,6 @@ require 'net/scp'
 require 'net/sftp'
 require 'net/ssh/proxy/socks5'
   
-# colors for terminal
-@@red   = "\033[1;31m"
-@@blue   = "\033[1;34m"
-@@green  = "\033[1;32m"
-@@yellow = "\033[1;33m"
-@@none   = "\033[0m"
-  
-$stdout.sync = true # autoflush
-  
 module Dust
   class Server
     attr_reader :attr, :ssh
@@ -90,23 +81,23 @@ module Dust
           f.puts text
         end
       end
-      print_result(true, quiet)
+      Dust.print_result(true, quiet)
     end
   
     def scp source, destination, quiet=false
       print " - deploying #{File.basename(source)}" unless quiet
       @ssh.scp.upload!(source, destination)
-      print_result(true, quiet)
+      Dust.print_result(true, quiet)
     end
   
     def symlink source, destination, quiet=false
       print " - deploying #{File.basename(source)}" unless quiet
-      print_result( exec("ln -s #{source} #{destination}")[:exit_code], quiet )
+      Dust.print_result( exec("ln -s #{source} #{destination}")[:exit_code], quiet )
     end
   
     def chmod mode, file, quiet=false
       print " - setting mode of #{File.basename(file)} to #{mode}" unless quiet
-      print_result( exec("chmod #{mode} #{file}")[:exit_code], quiet )
+      Dust.print_result( exec("chmod #{mode} #{file}")[:exit_code], quiet )
     end
   
     def install package, env="", quiet=false
@@ -114,13 +105,13 @@ module Dust
   
       case discover_os(true)
       when "gentoo"
-        print_result( exec("#{env} emerge #{package}")[:exit_code], quiet )
+        Dust.print_result( exec("#{env} emerge #{package}")[:exit_code], quiet )
       when "debian"
-        print_result( exec("#{env} aptitude install -y #{package}")[:exit_code], quiet )
+        Dust.print_result( exec("#{env} aptitude install -y #{package}")[:exit_code], quiet )
       when "centos"
-        print_result( exec("#{env} yum install -y #{package}")[:exit_code], quiet )
+        Dust.print_result( exec("#{env} yum install -y #{package}")[:exit_code], quiet )
       else
-        print_result(false, quiet)
+        Dust.print_result(false, quiet)
       end
     end
   
@@ -133,10 +124,10 @@ module Dust
    
       if os
         print os unless quiet
-        print_result(true, quiet)
+        Dust.print_result(true, quiet)
       else
         os = ' unknown' unless quiet
-        print_result(false, quiet)
+        Dust.print_result(false, quiet)
       end
       os
     end
@@ -144,39 +135,39 @@ module Dust
     def is_os? os_list, quiet=false
       print " - checking if this machine runs either #{os_list.join(' or ')}" unless quiet
       os_list.each do |os|
-        return print_result(true, quiet) if discover_os(true) == os 
+        return Dust.print_result(true, quiet) if discover_os(true) == os 
       end
-      print_result(false, quiet)
+      Dust.print_result(false, quiet)
     end
   
     def is_debian? quiet=false
       print " - checking if this machine runs debian" unless quiet
-      print_result( discover_os(true) == "debian", quiet )
+      Dust.print_result( discover_os(true) == "debian", quiet )
     end
   
     def is_ubuntu? quiet=false
       print " - checking if this machine runs ubuntu" unless quiet
-      print_result( discover_os(true) == "ubuntu", quiet )
+      Dust.print_result( discover_os(true) == "ubuntu", quiet )
     end
   
     def is_gentoo? quiet=false
       print " - checking if this machine runs gentoo" unless quiet
-      print_result( discover_os(true) == "gentoo", quiet )
+      Dust.print_result( discover_os(true) == "gentoo", quiet )
     end
   
     def is_centos? quiet=false
       print " - checking if this machine runs centos" unless quiet
-      print_result( discover_os(true) == "centos", quiet )
+      Dust.print_result( discover_os(true) == "centos", quiet )
     end
   
     def is_executable? file, quiet=false
       print " - checking if #{file} is installed" unless quiet
-      print_result( exec("test -x $(which #{file})")[:exit_code], quiet )
+      Dust.print_result( exec("test -x $(which #{file})")[:exit_code], quiet )
     end
   
     def file_exists? file, quiet=false
       print " - checking if #{file} is installed" unless quiet
-      print_result( exec("test -e #{file}")[:exit_code], quiet )
+      Dust.print_result( exec("test -e #{file}")[:exit_code], quiet )
     end
   
     # checks if one of the packages is installed
@@ -189,27 +180,27 @@ module Dust
       packages.each do |package|
         case os
         when "gentoo"
-          return print_result(true, quiet) unless exec("qlist -I #{package}")[:stdout].empty?
+          return Dust.print_result(true, quiet) unless exec("qlist -I #{package}")[:stdout].empty?
         when "debian"
-          return print_result(true, quiet) unless exec("dpkg -s #{package} |grep 'install ok'")[:stdout].empty?
+          return Dust.print_result(true, quiet) unless exec("dpkg -s #{package} |grep 'install ok'")[:stdout].empty?
         when "ubuntu"
-          return print_result(true, quiet) unless exec("dpkg -s #{package} |grep 'install ok'")[:stdout].empty?
+          return Dust.print_result(true, quiet) unless exec("dpkg -s #{package} |grep 'install ok'")[:stdout].empty?
         when "centos"
-          return print_result(true, quiet) if exec("rpm -q #{package}")[:exit_code]
+          return Dust.print_result(true, quiet) if exec("rpm -q #{package}")[:exit_code]
         end
       end
   
-      print_result(false, quiet)
+      Dust.print_result(false, quiet)
     end
   
     def restart_service service, quiet=false
       print " - restarting #{service}" unless quiet 
-      print_result( exec("/etc/init.d/#{service} restart")[:exit_code], quiet )
+      Dust.print_result( exec("/etc/init.d/#{service} restart")[:exit_code], quiet )
     end
   
     def reload_service service, quiet=false
       print " - reloading #{service}" unless quiet
-      print_result( exec("/etc/init.d/#{service} reload")[:exit_code], quiet )
+      Dust.print_result( exec("/etc/init.d/#{service} reload")[:exit_code], quiet )
     end
   
     def qm_list name, quiet=false
@@ -221,26 +212,12 @@ module Dust
         ret = exec('qm list |grep -v VMID')
       end 
   
-      if print_result(ret[:exit_code], quiet)
+      if Dust.print_result(ret[:exit_code], quiet)
         line = ret[:stdout].gsub(/\n/, "\n\t")
         return "#{@@green}#{@attr['hostname']}#{@@none}\t#{line}\n"
       end
   
       return ''
-    end
-  
-    def print_result ret, quiet=false
-      if ret == 0 or ret == true
-        puts " #{@@blue}[ ok ]#{@@none}" unless quiet
-        return true
-      else
-        puts " #{@@red}[ failed ]#{@@none}" unless quiet
-        return false
-      end
-    end
-  
-    def print_warning string
-      puts "#{string} #{@@yellow}[ warning ]#{@@none}"
     end
   end
 end

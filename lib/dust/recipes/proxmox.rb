@@ -10,7 +10,7 @@ class Deploy::Proxmox < Thor
     result = String.new
 
     servers.each do | server |
-      puts "#{@@green}#{server.attr['hostname']}#{@@none}:"    
+      Dust.print_hostname server
       next unless server.is_debian?
       next unless server.package_installed?( ['proxmox-ve-2.6.35', 'proxmox-ve-2.6.32' ] )
 

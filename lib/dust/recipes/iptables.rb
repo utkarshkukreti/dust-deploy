@@ -6,7 +6,7 @@ class Deploy::Iptables < Thor
     servers = invoke 'deploy:start'
 
     servers.each do | server |
-      puts "#{@@green}#{server.attr['hostname']}#{@@none}:"
+      Dust.print_hostname server
 
       server.install('iptables') unless server.package_installed?('iptables')
 
@@ -28,7 +28,7 @@ class Deploy::Iptables < Thor
     servers = invoke 'deploy:start'
 
     servers.each do | server |
-      puts "#{@@green}#{server.attr['hostname']}#{@@none}:"
+      Dust.print_hostname server
       next unless server.package_installed?('iptables')
 
       server.disconnect

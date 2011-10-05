@@ -48,14 +48,14 @@ class Deploy::Duplicity < Thor
     config_file = YAML.load_file(@@config_file)
 
     servers.each do | server |
-      puts "#{@@green}#{server.attr['hostname']}#{@@none}:"
+      Dust.print_hostname server
 
       # get configuration from yaml file
       print ' - getting configuration'
       scenarios = config_file.select do |title, config|
         config['hosts'].include?(server.attr['hostname'])
       end
-      next unless scenarios.empty? ? server.print_result(false) : server.print_result(true)
+      next unless scenarios.empty? ? Dust.print_false : Dust.print_ok
 
       server.install('duplicity') unless server.package_installed?('duplicity')
 
@@ -67,7 +67,7 @@ class Deploy::Duplicity < Thor
         # check whether backend is specified, skip to next scenario if not
         unless config['backend']
           print "\n   ERROR: no backend specified."
-          server.print_result false
+          Dust.print_false
           next
         end
 
@@ -83,7 +83,7 @@ class Deploy::Duplicity < Thor
         # check if interval is correct   
         unless [ 'monthly', 'weekly', 'daily', 'hourly' ].include?(config['interval'])
           print "\n   ERROR: invalid interval: '#{config['interval']}'"
-          server.print_result false
+          Dust.print_false
           next
         end
 
@@ -91,7 +91,7 @@ class Deploy::Duplicity < Thor
         template = ERB.new( File.read("templates/#{self.class.namespace}/cronjob.erb"), nil, '%<>' )
         print "   - adjusting and deploying cronjob (#{config['interval']})"
         server.write("/etc/cron.#{config['interval']}/duplicity-#{title}", template.result(binding), true )
-        server.print_result true
+        Dust.print_ok
 
         # if the backup directory is shared, don't enable backup script automatically 
         unless config['shared_dir']
@@ -105,8 +105,8 @@ class Deploy::Duplicity < Thor
             server.chmod '0700', "/etc/cron.#{config['interval']}/duplicity-#{title}"
           end
 
-          server.print_warning('   - this scenario uses a shared backup dir, ' + 
-                               'thus not enabling cronjob automatically, use --enable')
+          Dust.print_warning('   - this scenario uses a shared backup dir, ' + 
+                             'thus not enabling cronjob automatically, use --enable')
         end
        
         if options.disable?
@@ -142,13 +142,13 @@ class Deploy::Duplicity < Thor
 
         next unless config['hosts'].include?(server.attr['hostname'])
 
-        puts "#{@@green}#{server.attr['hostname']}#{@@none}:"
+        Dust.print_hostname server
         next unless server.package_installed?('duplicity')
 
         # if this scenario shares a dir for multiple servers, only query the first one
         if config['shared_dir'] and server.attr['hostname'] != config['hosts'].first
           print " - The #{title} backup scenario uses a shared directory with #{config['hosts'].first}. Not checking again."
-          server.print_result(true)
+          Dust.print_ok
           server.disconnect
           puts
           next
@@ -159,7 +159,7 @@ class Deploy::Duplicity < Thor
                            "--archive-dir #{config['archive']} " +
                            "#{File.join(config['backend'], config['directory'])} " +
                            "|tail -n3 |head -n1")
-        server.print_result(ret[:exit_code])
+        Dust.print_result(ret[:exit_code])
 
         puts "\t#{ret[:stdout].sub(/^\s+([a-zA-Z]+)\s+(\w+\s\w+\s\d+\s\d+:\d+:\d+\s\d+)\s+(\d+)$/, 'Last backup: \1 (\3 sets) on \2')}"
 

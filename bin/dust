@@ -19,7 +19,7 @@ class Deploy < Thor::Runner
     filter.merge!(options[:filter]) if options[:filter]
 
     yaml = options.yaml? ? options[:yaml] : 'servers.yaml'
-    @servers = Dust::Dust.new(yaml)
+    @servers = Dust::Servers.new(yaml)
     @servers.select(filter)
     @servers
   end

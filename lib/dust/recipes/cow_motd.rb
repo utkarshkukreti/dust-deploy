@@ -6,14 +6,14 @@ class Deploy::CowMotd < Thor
     servers = invoke 'deploy:start'
 
     servers.each do | server |
-      puts "#{@@green}#{server.attr['hostname']}#{@@none}:"
+      Dust.print_hostname server
 
       # configure server using erb template
       template = ERB.new( File.read("templates/#{self.class.namespace}/motd.erb"), nil, '%<>' )
       print ' - adjusting and deploying /etc/motd'
       print ' (including the awesome warning cow)' if server.attr['environment'] == 'production'
       server.write('/etc/motd', template.result(binding), true )
-      server.print_result true
+      Dust.print_ok
 
       server.disconnect
       puts
