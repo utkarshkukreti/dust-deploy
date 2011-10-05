@@ -26,7 +26,7 @@ class Deploy::ZabbixAgent < Thor
 
       else
         print ' - os not supported'
-        Dust.print_false
+        Dust.print_failed
         next
       end
 

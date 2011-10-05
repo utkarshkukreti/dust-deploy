@@ -55,7 +55,7 @@ class Deploy::Duplicity < Thor
       scenarios = config_file.select do |title, config|
         config['hosts'].include?(server.attr['hostname'])
       end
-      next unless scenarios.empty? ? Dust.print_false : Dust.print_ok
+      next unless scenarios.empty? ? Dust.print_failed : Dust.print_ok
 
       server.install('duplicity') unless server.package_installed?('duplicity')
 
@@ -67,7 +67,7 @@ class Deploy::Duplicity < Thor
         # check whether backend is specified, skip to next scenario if not
         unless config['backend']
           print "\n   ERROR: no backend specified."
-          Dust.print_false
+          Dust.print_failed
           next
         end
 
@@ -83,11 +83,11 @@ class Deploy::Duplicity < Thor
         # check if interval is correct   
         unless [ 'monthly', 'weekly', 'daily', 'hourly' ].include?(config['interval'])
           print "\n   ERROR: invalid interval: '#{config['interval']}'"
-          Dust.print_false
+          Dust.print_failed
           next
         end
 
-        # adjust and upload duplicity.include
+        # adjust and upload cronjob
         template = ERB.new( File.read("templates/#{self.class.namespace}/cronjob.erb"), nil, '%<>' )
         print "   - adjusting and deploying cronjob (#{config['interval']})"
         server.write("/etc/cron.#{config['interval']}/duplicity-#{title}", template.result(binding), true )

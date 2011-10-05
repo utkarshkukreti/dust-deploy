@@ -60,7 +60,7 @@ class Deploy::Nginx < Thor
       Dust.print_ok
       server.restart_service('nginx')
     else
-      Dust.print_false
+      Dust.print_failed
     end
   end
 end
