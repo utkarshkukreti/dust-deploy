@@ -108,6 +108,8 @@ module Dust
         Dust.print_result( exec("#{env} emerge #{package}")[:exit_code], quiet )
       when "debian"
         Dust.print_result( exec("#{env} aptitude install -y #{package}")[:exit_code], quiet )
+      when "ubuntu"
+        Dust.print_result( exec("#{env} aptitude install -y #{package}")[:exit_code], quiet )
       when "centos"
         Dust.print_result( exec("#{env} yum install -y #{package}")[:exit_code], quiet )
       else
