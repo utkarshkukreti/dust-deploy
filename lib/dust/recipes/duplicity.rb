@@ -47,15 +47,24 @@ class Deploy::Duplicity < Thor
 
     config_file = YAML.load_file(@@config_file)
 
-    servers.each do | server |
+    servers.each do |server|
       Dust.print_hostname server
 
-      # get configuration from yaml file
-      print ' - getting configuration'
+      # selecting scenarios for this server
+      print ' - getting scenarios for this server'
+
       scenarios = config_file.select do |title, config|
-        config['hosts'].include?(server.attr['hostname'])
+        if config['hosts']
+          config['hosts'].include?(server.attr['hostname']) 
+        else
+          title == server.attr['hostname']
+        end
       end
-      next unless scenarios.empty? ? Dust.print_failed : Dust.print_ok
+
+      unless Dust.print_result !scenarios.empty?
+        next
+        puts
+      end
 
       server.install('duplicity') unless server.package_installed?('duplicity')
 
@@ -128,13 +137,17 @@ class Deploy::Duplicity < Thor
 
     scenarios.each do |title, scenario_config|
 
-      if scenario_config['hosts'].class == Array
-        # join array to string
-        hostname = scenario_config['hosts'].join(',')
+      if scenario_config['hosts']
+        if scenario_config['hosts'].class == Array
+          # join array to string
+          hostname = scenario_config['hosts'].join(',')
+        else
+          hostname = scenario_config['hosts']
+        end
       else
-        hostname = scenario_config['hosts']
+        hostname = title
       end
-        
+  
       servers.select('hostname' => hostname) 
 
       servers.each do |server|
@@ -183,6 +196,7 @@ class Deploy::Duplicity < Thor
       'include' => [ '/etc/', '/root/', '/var/log/' ],
       'exclude' => [ "'**'" ],
       'shared_dir' => shared_dir,
+      'hosts' => server.attr['hostname'],
       'directory' => server.attr['hostname'] # set hostname as default directory on backup server
     }.merge(config)
   end
