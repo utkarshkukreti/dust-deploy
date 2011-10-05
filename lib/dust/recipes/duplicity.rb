@@ -58,12 +58,23 @@ class Deploy::Duplicity < Thor
       next unless scenarios.empty? ? server.print_result(false) : server.print_result(true)
 
       server.install('duplicity') unless server.package_installed?('duplicity')
-      server.install('ncftp') unless server.package_installed?('ncftp')
 
       scenarios.each do |title, scenario_config|
         print " - deploying #{title}"
 
         config = merge_with_defaults(scenario_config, server)
+
+        # check whether backend is specified, skip to next scenario if not
+        unless config['backend']
+          print "\n   ERROR: no backend specified."
+          server.print_result false
+          next
+        end
+
+        # check whether we need ncftp
+        if config['backend'].include?('ftp://')
+          server.install('ncftp') unless server.package_installed?('ncftp')
+        end
 
         # check if interval is correct   
         unless [ 'monthly', 'weekly', 'daily', 'hourly' ].include?(config['interval'])
