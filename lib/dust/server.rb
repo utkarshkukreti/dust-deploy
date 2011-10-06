@@ -122,7 +122,7 @@ module Dust
       when "ubuntu"
         Dust.print_result( exec("#{env} aptitude install -y #{package}")[:exit_code], quiet )
       when "centos"
-        Dust.print_result( exec("#{env} yum install -y #{package}")[:exit_code], quiet )
+        Dust.print_result( exec("#{env} yum install -y #{package}; rpm -q #{package}")[:exit_code], quiet )
       else
         Dust.print_result(false, quiet)
       end
