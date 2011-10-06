@@ -139,6 +139,8 @@ class Deploy::Duplicity < Thor
     end
   end
 
+  method_options :long => :boolean
+
   desc "#{namespace}:status", 'run duplicity collection-status'
   def status
     servers = invoke 'deploy:start'
@@ -171,13 +173,26 @@ class Deploy::Duplicity < Thor
         end
 
         print " - running collection-status (#{title})"
-        ret = server.exec("nice -n #{config['nice']} duplicity collection-status " +
-                           "--archive-dir #{config['archive']} " +
-                           "#{File.join(config['backend'], config['directory'])} " +
-                           "|tail -n3 |head -n1")
+
+        if options.long?
+          cmd = "nice -n #{config['nice']} duplicity collection-status " +
+                "--archive-dir #{config['archive']} " +
+                "#{File.join(config['backend'], config['directory'])}"
+        else
+          cmd = "nice -n #{config['nice']} duplicity collection-status " +
+                "--archive-dir #{config['archive']} " +
+                "#{File.join(config['backend'], config['directory'])} " +
+                "|tail -n3 |head -n1"
+        end
+
+        ret = server.exec cmd
         Dust.print_result(ret[:exit_code])
 
-        puts "\t#{ret[:stdout].sub(/^\s+([a-zA-Z]+)\s+(\w+\s\w+\s\d+\s\d+:\d+:\d+\s\d+)\s+(\d+)$/, 'Last backup: \1 (\3 sets) on \2')}"
+        if options.long?
+          puts "\n#{ret[:stdout]}"
+        else
+          puts "\t#{ret[:stdout].sub(/^\s+([a-zA-Z]+)\s+(\w+\s\w+\s\d+\s\d+:\d+:\d+\s\d+)\s+(\d+)$/, 'Last backup: \1 (\3 sets) on \2')}"
+        end
 
         server.disconnect
         puts
