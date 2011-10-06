@@ -1,7 +1,7 @@
-class Deploy::CowMotd < Thor
-  namespace :cow_motd
+class Deploy::Motd < Thor
+  namespace :motd
 
-  desc "#{namespace}:deploy", 'deploys the awesome flinc production server warning cow'
+  desc "#{namespace}:deploy", 'deploys message of the day'
   def deploy
     servers = invoke 'deploy:start'
 
@@ -20,7 +20,7 @@ class Deploy::CowMotd < Thor
     end
   end
 
-  desc "#{namespace}:show", 'have a look at the awesome cow'
+  desc "#{namespace}:show", 'have a look at your message of the day'
   def show
     server = invoke('deploy:start', [ 'environment' => 'production' ]).first
 
