@@ -226,8 +226,7 @@ module Dust
       end 
   
       if Dust.print_result(ret[:exit_code], quiet)
-        line = ret[:stdout].gsub(/\n/, "\n\t")
-        return "#{@@green}#{@attr['hostname']}#{@@none}\t#{line}\n"
+        return "\t#{ret[:stdout].gsub(/\n/, "\n\t")}"
       end
   
       return ''
