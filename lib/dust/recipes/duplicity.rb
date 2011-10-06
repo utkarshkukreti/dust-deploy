@@ -197,6 +197,7 @@ class Deploy::Duplicity < Thor
       'exclude' => [ "'**'" ],
       'shared_dir' => shared_dir,
       'hosts' => server.attr['hostname'],
+      'options' => [ 'cleanup' ],
       'directory' => server.attr['hostname'] # set hostname as default directory on backup server
     }.merge(config)
   end
