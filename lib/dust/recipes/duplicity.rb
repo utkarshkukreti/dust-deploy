@@ -61,7 +61,13 @@ class Deploy::Duplicity < Thor
 
       next if scenarios.empty?
       next unless server.connect
-      server.install('duplicity') unless server.package_installed?('duplicity')
+
+      unless server.package_installed?('duplicity')
+        unless server.install('duplicity') 
+          puts
+          next
+        end
+      end
 
       scenarios.each do |title, scenario_config|
         puts " - deploying #{title}"
