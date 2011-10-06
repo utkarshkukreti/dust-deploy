@@ -11,7 +11,7 @@ class Deploy::CowMotd < Thor
       # configure server using erb template
       template = ERB.new( File.read("templates/#{self.class.namespace}/motd.erb"), nil, '%<>' )
       print ' - adjusting and deploying /etc/motd'
-      print ' (including the awesome warning cow)' if server.attr['environment'] == 'production'
+      print ' (including the awesome warning cow)' if server['environment'] == 'production'
       server.write('/etc/motd', template.result(binding), true )
       Dust.print_ok
 

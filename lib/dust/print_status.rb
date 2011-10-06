@@ -31,6 +31,6 @@ module Dust
   end
 
   def self.print_hostname server
-    puts "#{@green}#{server.attr['hostname']}#{@none}:"
+    puts "#{@green}#{server['hostname']}#{@none}:"
   end
 end

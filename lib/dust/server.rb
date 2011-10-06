@@ -6,7 +6,7 @@ require 'net/ssh/proxy/socks5'
   
 module Dust
   class Server
-    attr_reader :attr, :ssh
+    attr_reader :ssh
   
     def initialize attr
       @attr = attr
@@ -228,5 +228,24 @@ module Dust
   
       return ''
     end
+
+
+    private
+
+    def method_missing method, *args, &block
+      # make server attributes accessible via server.attribute
+      if @attr[method.to_s]
+        @attr[method.to_s]
+   
+      # and as server['attribute']
+      elsif @attr[args.first]
+        @attr[args.first]
+
+      # default to super
+      else
+        super
+      end
+    end
+
   end
 end
