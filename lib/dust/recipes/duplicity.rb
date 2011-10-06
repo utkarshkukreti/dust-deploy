@@ -55,9 +55,9 @@ class Deploy::Duplicity < Thor
 
       scenarios = config_file.select do |title, config|
         if config['hosts']
-          config['hosts'].include?(server.attr['hostname']) 
+          config['hosts'].include?(server['hostname']) 
         else
-          title == server.attr['hostname']
+          title == server['hostname']
         end
       end
 
@@ -115,7 +115,7 @@ class Deploy::Duplicity < Thor
           end
 
           Dust.print_warning('   - this scenario uses a shared backup dir, ' + 
-                             'thus not enabling cronjob automatically, use --enable')
+                                  'thus not enabling cronjob automatically, use --enable')
         end
        
         if options.disable?
@@ -135,31 +135,24 @@ class Deploy::Duplicity < Thor
 
     scenarios = YAML.load_file("templates/#{self.class.namespace}/configuration.yaml")
 
-    scenarios.each do |title, scenario_config|
+    servers.each connect=false do |server|
+      scenarios.each do |title, scenario_config|
 
-      if scenario_config['hosts']
-        if scenario_config['hosts'].class == Array
-          # join array to string
-          hostname = scenario_config['hosts'].join(',')
+        # skip to next scenario if this scenario is not for this host
+        if scenario_config['hosts']
+          next unless scenario_config['hosts'].include?(server['hostname'])
         else
-          hostname = scenario_config['hosts']
+          next unless title == server['hostname']
         end
-      else
-        hostname = title
-      end
-  
-      servers.select('hostname' => hostname) 
 
-      servers.each do |server|
         config = merge_with_defaults(scenario_config, server)
 
-        next unless config['hosts'].include?(server.attr['hostname'])
-
+        server = Dust::Server.new server # connect manually
         Dust.print_hostname server
         next unless server.package_installed?('duplicity')
 
         # if this scenario shares a dir for multiple servers, only query the first one
-        if config['shared_dir'] and server.attr['hostname'] != config['hosts'].first
+        if config['shared_dir'] and server['hostname'] != config['hosts'].first
           print " - The #{title} backup scenario uses a shared directory with #{config['hosts'].first}. Not checking again."
           Dust.print_ok
           server.disconnect
@@ -196,9 +189,9 @@ class Deploy::Duplicity < Thor
       'include' => [ '/etc/', '/root/', '/var/log/' ],
       'exclude' => [ "'**'" ],
       'shared_dir' => shared_dir,
-      'hosts' => server.attr['hostname'],
+      'hosts' => server['hostname'],
       'options' => [ 'cleanup' ],
-      'directory' => server.attr['hostname'] # set hostname as default directory on backup server
+      'directory' => server['hostname'] # set hostname as default directory on backup server
     }.merge(config)
   end
 end
