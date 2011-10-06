@@ -10,7 +10,7 @@ class Deploy::Exec < Thor
     exit unless options[:command]
 
     servers.each do | server |
-      Dust.print_hostname server
+      next unless server.connect
 
       print " - running command: #{options[:command]}"
       ret = server.exec options[:command]

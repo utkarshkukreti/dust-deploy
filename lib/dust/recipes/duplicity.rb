@@ -18,7 +18,7 @@ class Deploy::Duplicity < Thor
     config_file = File.open(@@config_file, 'w+')
 
     # get servers, but don't connect
-    servers.each connect=false do |server|
+    servers.each do |server|
       config_file.puts "#{server['hostname']}:"
       config_file.puts "  hostname: #{server['hostname']}"
       config_file.puts "  backend: \"#{options[:backend]}\"" if options[:backend]
@@ -48,7 +48,7 @@ class Deploy::Duplicity < Thor
     config_file = YAML.load_file(@@config_file)
 
     servers.each do |server|
-      Dust.print_hostname server
+      next unless server.connect
 
       # selecting scenarios for this server
       print ' - getting scenarios for this server'
@@ -135,9 +135,8 @@ class Deploy::Duplicity < Thor
 
     scenarios = YAML.load_file("templates/#{self.class.namespace}/configuration.yaml")
 
-    servers.each connect=false do |server|
+    servers.each do |server|
       scenarios.each do |title, scenario_config|
-
         # skip to next scenario if this scenario is not for this host
         if scenario_config['hosts']
           next unless scenario_config['hosts'].include?(server['hostname'])
@@ -147,8 +146,7 @@ class Deploy::Duplicity < Thor
 
         config = merge_with_defaults(scenario_config, server)
 
-        server = Dust::Server.new server # connect manually
-        Dust.print_hostname server
+        next unless server.connect
         next unless server.package_installed?('duplicity')
 
         # if this scenario shares a dir for multiple servers, only query the first one

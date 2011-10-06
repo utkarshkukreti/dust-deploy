@@ -21,22 +21,26 @@ module Dust
       @attr['user'] = 'root' unless @attr.has_key?('user')
       @attr['port'] = 22 unless @attr.has_key?('port')
       @attr['password'] = '' unless @attr.has_key?('password')
-  
+    end
+
+    def connect 
+      Dust.print_hostname @attr['hostname']
       begin
         # connect to proxy if given
-        @proxy = @attr.has_key?('proxy') ? Net::SSH::Proxy::SOCKS5.new( @attr['proxy'].split(':')[0],
-                                                                        @attr['proxy'].split(':')[1] ) : nil
+        proxy = @attr.has_key?('proxy') ? proxy = Net::SSH::Proxy::SOCKS5.new( @attr['proxy'].split(':')[0],
+                                                                               @attr['proxy'].split(':')[1] ) : nil
  
-        @ssh = Net::SSH.start(@attr['fqdn'], @attr['user'], {
-                                :password => @attr['password'],
+        @ssh = Net::SSH.start(@attr['fqdn'], @attr['user'],
+                              { :password => @attr['password'],
                                 :port => @attr['port'],
-                                :proxy => @proxy } )
+                                :proxy => proxy } )
       rescue Exception
         error_message = "coudln't connect to #{@attr['fqdn']}"
-        error_message += " (via socks5 proxy)" if @proxy
+        error_message += " (via socks5 proxy #{@attr['proxy']})" if proxy
         Dust.print_failed error_message
-        raise Exception
+        return false
       end 
+      true
     end
   
     def disconnect

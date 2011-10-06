@@ -6,8 +6,7 @@ class Deploy::Iptables < Thor
     servers = invoke 'deploy:start'
 
     servers.each do | server |
-      Dust.print_hostname server
-
+      next unless server.connect
       server.install('iptables') unless server.package_installed?('iptables')
 
       # configure server using erb template
@@ -28,7 +27,7 @@ class Deploy::Iptables < Thor
     servers = invoke 'deploy:start'
 
     servers.each do | server |
-      Dust.print_hostname server
+      next unless server.connect
       next unless server.package_installed?('iptables')
 
       server.disconnect

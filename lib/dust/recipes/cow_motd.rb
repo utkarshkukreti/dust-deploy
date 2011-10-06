@@ -6,7 +6,7 @@ class Deploy::CowMotd < Thor
     servers = invoke 'deploy:start'
 
     servers.each do | server |
-      Dust.print_hostname server
+      next unless server.connect
 
       # configure server using erb template
       template = ERB.new( File.read("templates/#{self.class.namespace}/motd.erb"), nil, '%<>' )

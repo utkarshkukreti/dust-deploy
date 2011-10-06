@@ -6,7 +6,7 @@ class Deploy::ZabbixAgent < Thor
     servers = invoke 'deploy:start'
 
     servers.each do | server |
-      Dust.print_hostname server
+      next unless server.connect
 
       os = server.discover_os
       os = 'debian' if os == 'ubuntu' # treat ubuntu as debian
@@ -50,7 +50,7 @@ class Deploy::ZabbixAgent < Thor
     servers = invoke 'deploy:start', [ 'group' => 'postgres' ]
 
     servers.each do | server |
-      Dust.print_hostname server
+      next unless server.connect
       next unless server.is_gentoo?
       next unless server.package_installed?('postgresql-server')
 

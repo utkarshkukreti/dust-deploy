@@ -6,7 +6,7 @@ class Deploy::Debian < Thor
     servers = invoke 'deploy:start', [ 'group' => 'debian' ]
 
     servers.each do | server |
-      Dust.print_hostname server
+      next unless server.connect
       next unless server.is_debian?
       server.install('unattended-upgrades') unless server.package_installed?('unattended-upgrades')
       server.scp("templates/#{self.class.namespace}/02periodic", '/etc/apt/apt.conf.d/02periodic')
@@ -21,7 +21,7 @@ class Deploy::Debian < Thor
     servers = invoke 'deploy:start', [ 'group' => 'debian' ]
 
     servers.each do | server |
-      Dust.print_hostname server
+      next unless server.connect
       next unless server.is_os?( [ "debian", "ubuntu" ] )
       server.scp("templates/#{self.class.namespace}/locale", '/etc/default/locale')
 

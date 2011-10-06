@@ -6,7 +6,7 @@ class Deploy::Dnsmasq < Thor
     servers = invoke 'deploy:start', [ 'group' => 'proxy' ]
 
     servers.each do | server |
-      Dust.print_hostname server
+      next unless server.connect
       next unless server.package_installed?('dnsmasq')
       server.scp("templates/#{self.class.namespace}/hosts", '/etc/hosts')
       server.restart_service('dnsmasq')

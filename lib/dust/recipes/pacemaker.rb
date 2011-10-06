@@ -6,7 +6,7 @@ class Deploy::Pacemaker< Thor
     servers = invoke 'deploy:start', [ 'group' => 'postgres' ]
 
     servers.each do | server |
-      Dust.print_hostname server
+      next unless server.connect
       next unless server.package_installed?('pacemaker')
       next unless server.package_installed?('postgresql-server')
 

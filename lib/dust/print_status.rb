@@ -30,7 +30,7 @@ module Dust
     puts "#{string} #{@yellow}[ warning ]#{@none}"
   end
 
-  def self.print_hostname server
-    puts "#{@green}#{server['hostname']}#{@none}:"
+  def self.print_hostname hostname
+    puts "#{@green}#{hostname}#{@none}:"
   end
 end

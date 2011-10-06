@@ -6,7 +6,7 @@ class Deploy::Nginx < Thor
     servers = invoke 'deploy:start', [ 'group' => 'proxy' ]
 
     servers.each do | server |
-      Dust.print_hostname server
+      next unless server.connect
 
       deploy_config server, 'proxy'
       check_config server
@@ -21,7 +21,7 @@ class Deploy::Nginx < Thor
     servers = invoke 'deploy:start', [ 'group' => 'rails' ]
 
     servers.each do | server |
-      Dust.print_hostname server
+      next unless server.connect
 
       deploy_config server, 'rails'
       check_config server

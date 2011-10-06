@@ -52,19 +52,9 @@ module Dust
       @selected
     end
   
-    def each connect=true, &block
+    def each &block
       @selected.each do |server|
-        if connect
-          begin
-            s = Server.new server
-          rescue Exception
-            next unless s
-          end
-
-          yield s
-        else
-          yield server
-        end
+        yield Server.new server
       end
     end
   
