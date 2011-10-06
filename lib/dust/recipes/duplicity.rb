@@ -96,6 +96,15 @@ class Deploy::Duplicity < Thor
           next
         end
 
+        # add hostkey to known_hosts
+        if config['backend'].include?('scp://') and config['hostkey']
+          print '   - checking if ssh key is in known_hosts'
+          unless Dust.print_result server.exec("grep -q '#{config['hostkey']}' ~/.ssh/known_hosts")[:exit_code] == 0
+            print '   - adding host key to known_hosts'
+            Dust.print_result server.exec("mkdir ~/.ssh; echo '#{config['hostkey']}' >> ~/.ssh/known_hosts")[:exit_code]
+          end
+        end
+
         # adjust and upload cronjob
         template = ERB.new( File.read("templates/#{self.class.namespace}/cronjob.erb"), nil, '%<>' )
         print "   - adjusting and deploying cronjob (#{config['interval']})"
