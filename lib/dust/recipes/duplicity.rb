@@ -50,11 +50,7 @@ class Deploy::Duplicity < Thor
     global = config_file.delete('global')
 
     servers.each do |server|
-      next unless server.connect
-
       # selecting scenarios for this server
-      print ' - getting scenarios for this server'
-
       scenarios = config_file.select do |title, config|
         if config['hosts']
           config['hosts'].include?(server['hostname']) 
@@ -63,11 +59,8 @@ class Deploy::Duplicity < Thor
         end
       end
 
-      unless Dust.print_result !scenarios.empty?
-        next
-        puts
-      end
-
+      next if scenarios.empty?
+      next unless server.connect
       server.install('duplicity') unless server.package_installed?('duplicity')
 
       scenarios.each do |title, scenario_config|
