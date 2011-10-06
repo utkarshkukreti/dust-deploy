@@ -199,7 +199,7 @@ module Dust
         when "ubuntu"
           return Dust.print_result(true, quiet) unless exec("dpkg -s #{package} |grep 'install ok'")[:stdout].empty?
         when "centos"
-          return Dust.print_result(true, quiet) unless exec("rpm -q #{package}")[:exit_code]
+          return Dust.print_result(true, quiet) if exec("rpm -q #{package}")[:exit_code] == 0
         end
       end
   
