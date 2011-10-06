@@ -45,7 +45,9 @@ class Deploy::Duplicity < Thor
       return -1
     end
 
+    # load configuration from yaml file and retrieve global settings
     config_file = YAML.load_file(@@config_file)
+    global = config_file.delete('global')
 
     servers.each do |server|
       next unless server.connect
@@ -71,7 +73,7 @@ class Deploy::Duplicity < Thor
       scenarios.each do |title, scenario_config|
         puts " - deploying #{title}"
 
-        config = merge_with_defaults(scenario_config, server)
+        config = merge_with_defaults(global.merge(scenario_config), server)
 
         # check whether backend is specified, skip to next scenario if not
         unless config['backend']
@@ -142,7 +144,9 @@ class Deploy::Duplicity < Thor
   def status
     servers = invoke 'deploy:start'
 
-    scenarios = YAML.load_file("templates/#{self.class.namespace}/configuration.yaml")
+    # load configuration from yaml file and retrieve global settings
+    scenarios = YAML.load_file(@@config_file)
+    global = scenarios.delete('global')
 
     servers.each do |server|
       scenarios.each do |title, scenario_config|
@@ -153,7 +157,7 @@ class Deploy::Duplicity < Thor
           next unless title == server['hostname']
         end
 
-        config = merge_with_defaults(scenario_config, server)
+        config = merge_with_defaults(global.merge(scenario_config), server)
 
         next unless server.connect
         next unless server.package_installed?('duplicity')
