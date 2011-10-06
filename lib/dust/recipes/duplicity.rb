@@ -107,7 +107,7 @@ class Deploy::Duplicity < Thor
 
         # adjust and upload cronjob
         template = ERB.new( File.read("templates/#{self.class.namespace}/cronjob.erb"), nil, '%<>' )
-        print "   - adjusting and deploying cronjob (#{config['interval']})"
+        print "   - adjusting and deploying cronjob (interval: #{config['interval']})"
         server.write("/etc/cron.#{config['interval']}/duplicity-#{title}", template.result(binding), true )
         Dust.print_ok
 
