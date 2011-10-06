@@ -28,7 +28,7 @@ class Deploy < Thor::Runner
   def show
     servers = invoke 'start'
     servers.each do |server|
-      puts server.attr.inspect
+      puts server.inspect
     end
   end
 
