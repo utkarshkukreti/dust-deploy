@@ -3,16 +3,15 @@ require 'yaml'
   
 module Dust
   class Servers
-    attr_reader :all, :selected,
-                :proxy, :global
+    attr_reader :all, :selected, :global
   
     def initialize yaml
       # load server configuration
       @all = YAML.load_file(yaml)
 
-      # get global configuration, valid for all servers
+      # save global attributes
       @global = @all.delete('global')
- 
+
       # select all servers by default
       @selected = select('group' => 'all')
     end
@@ -44,15 +43,24 @@ module Dust
         puts "no hosts found matching selection"
         return false
       end
-  
+
+      # overwrite global attributes with attributes for each server
+      @selected.map! do |server|
+        @global.merge(server) if @global
+      end
+
       @selected
     end
   
     def each connect=true, &block
       @selected.each do |server|
         if connect
-          s = connect server
-          next unless s
+          begin
+            s = Server.new server
+          rescue Exception
+            next unless s
+          end
+
           yield s
         else
           yield server
@@ -61,22 +69,8 @@ module Dust
     end
   
     def first
-      connect @selected.first
+      Server.new @selected.first
     end
 
-    def connect server
-      begin
-        # overwrite global attributes with attributes for this server
-        server = @global.merge(server)
-
-        # set proxy from command-line (if given)
-        server['proxy'] = @proxy if @proxy
-
-        return Server.new(server)
-      rescue NameError
-        puts "#{@@red}ERROR:#{@@none} couldn't connect to #{server['hostname']}!\n\n"
-        return false
-      end
-    end
   end
 end
