@@ -110,7 +110,19 @@ module Dust
       print " - deleting #{file}"
       Dust.print_result( exec("rm -rf #{file}")[:exit_code], quiet)
     end
-  
+ 
+    def get_system_users quiet=false
+      print " - getting all system users" unless quiet
+      ret = exec('getent passwd |cut -d: -f1')
+      Dust.print_result ret[:exit_code], quiet
+
+      users = Array.new
+      ret[:stdout].each do |user|
+        users.push user.chomp
+      end
+      users
+    end
+ 
     def install package, env="", quiet=false
       print "   - installing #{package}" unless quiet
   
