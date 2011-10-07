@@ -3,6 +3,8 @@ class Deploy::Ssh < Thor
 
   @@authorized_keys_config = "templates/#{namespace}/authorized_keys.yaml"
 
+  method_options :cleanup => :boolean
+
   desc "#{namespace}:authorized_keys", "deploy authorized_keys"
   def authorized_keys
     servers = invoke 'deploy:start'
@@ -53,6 +55,20 @@ class Deploy::Ssh < Thor
         # check permissions
         server.chown("#{remote_user}:#{remote_user}", "~#{remote_user}/.ssh")
         server.chmod('0644', "~#{remote_user}/.ssh/authorized_keys")
+
+
+        # remove authorized_keys files for all other users
+        if options.cleanup?
+          puts ' - deleting other authorized_keys files'
+          server.get_system_users(true).each do |user|
+            next if users.keys.include?(user)
+            if server.file_exists?("~#{user}/.ssh/authorized_keys", true)
+              print '  '
+              server.rm "~#{user}/.ssh/authorized_keys" 
+            end
+          end
+        end
+
       end
 
       server.disconnect
