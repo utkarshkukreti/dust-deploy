@@ -105,6 +105,11 @@ module Dust
       print " - setting owner of #{File.basename(file)} to #{user}" unless quiet
       Dust.print_result( exec("chown -R #{user} #{file}")[:exit_code], quiet )
     end
+
+    def rm file, quiet=false
+      print " - deleting #{file}"
+      Dust.print_result( exec("rm -rf #{file}")[:exit_code], quiet)
+    end
   
     def install package, env="", quiet=false
       print "   - installing #{package}" unless quiet
