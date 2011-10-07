@@ -22,7 +22,7 @@ class Deploy::Motd < Thor
 
   desc "#{namespace}:show", 'have a look at your message of the day'
   def show
-    server = invoke('deploy:start', [ 'environment' => 'production' ]).first
+    server = invoke('deploy:start').first
 
     template = ERB.new( File.read("templates/#{self.class.namespace}/motd.erb"), nil, '%<>' )
     puts template.result(binding)
