@@ -1,7 +1,6 @@
 require 'rubygems'
 require 'net/ssh'
 require 'net/scp'
-require 'net/sftp'
 require 'net/ssh/proxy/socks5'
   
 module Dust
@@ -27,16 +26,16 @@ module Dust
       Dust.print_hostname @attr['hostname']
       begin
         # connect to proxy if given
-        @proxy = @attr.has_key?('proxy') ? Net::SSH::Proxy::SOCKS5.new( @attr['proxy'].split(':')[0],
+        proxy = @attr.has_key?('proxy') ? Net::SSH::Proxy::SOCKS5.new( @attr['proxy'].split(':')[0],
                                                                         @attr['proxy'].split(':')[1] ) : nil
  
         @ssh = Net::SSH.start(@attr['fqdn'], @attr['user'],
                               { :password => @attr['password'],
                                 :port => @attr['port'],
-                                :proxy => @proxy } )
+                                :proxy => proxy } )
       rescue Exception
         error_message = "coudln't connect to #{@attr['fqdn']}"
-        error_message += " (via socks5 proxy #{@attr['proxy']})" if @proxy
+        error_message += " (via socks5 proxy #{@attr['proxy']})" if proxy
         Dust.print_failed error_message
         return false
       end 
@@ -83,16 +82,7 @@ module Dust
   
     def write target, text, quiet=false
       print " - deploying #{File.basename(target)}" unless quiet
-      Net::SFTP.start(@attr['fqdn'], @attr['user'], { 
-                        :password => @attr['password'],
-                        :port => @attr['port'],
-                        :proxy => @proxy } ) do |sftp|
-  
-        sftp.file.open(target, 'w') do |f|
-          f.puts text
-        end
-      end
-      Dust.print_result(true, quiet)
+      Dust.print_result( exec("echo '#{text}' > #{target}")[:exit_code], quiet )
     end
   
     def scp source, destination, quiet=false
