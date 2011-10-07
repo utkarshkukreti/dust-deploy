@@ -127,6 +127,23 @@ module Dust
         Dust.print_result(false, quiet)
       end
     end
+
+    def system_update quiet=false
+      print " - installing system updates"
+
+      case discover_os(true)
+      when "gentoo"
+        Dust.print_result( exec("emerge -uND @world")[:exit_code], quiet )
+      when "debian"
+        Dust.print_result( exec("aptitude full-upgrade -y")[:exit_code], quiet )
+      when "ubuntu"
+        Dust.print_result( exec("aptitude full-upgrade -y")[:exit_code], quiet )
+      when "centos"
+        Dust.print_result( exec("yum upgrade -y")[:exit_code], quiet )
+      else
+        Dust.print_result(false, quiet)
+      end
+    end
   
     def discover_os quiet=false
       print " - determining os: " unless quiet
