@@ -100,6 +100,11 @@ module Dust
       print " - setting mode of #{File.basename(file)} to #{mode}" unless quiet
       Dust.print_result( exec("chmod #{mode} #{file}")[:exit_code], quiet )
     end
+
+    def chown user, file, quiet=false
+      print " - setting owner of #{File.basename(file)} to #{user}" unless quiet
+      Dust.print_result( exec("chown -R #{user} #{file}")[:exit_code], quiet )
+    end
   
     def install package, env="", quiet=false
       print "   - installing #{package}" unless quiet
