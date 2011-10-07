@@ -13,16 +13,16 @@ class Deploy::ZabbixAgent < Thor
 
       # install zabbix package
       if os == 'debian'
-        server.install('zabbix-agent') unless server.package_installed?('zabbix-agent')
+        next unless server.install_package('zabbix-agent')
 
         # debsecan is needed for zabbix checks (security updates)
-        server.install('debsecan') unless server.package_installed?('debsecan')
+        next unless server.install_package('debsecan')
 
       elsif os == 'gentoo'
-        server.install('zabbix', "USE=agent") unless server.package_installed?('zabbix')
+        next unless server.install_package('zabbix', "USE=agent")
 
         # glsa-check (part of gentoolkit) is needed for zabbix checks (security updates)
-        server.install('gentoolkit') unless server.package_installed?('gentoolkit')
+        next unless server.install_package('gentoolkit')
 
       else
         print ' - os not supported'

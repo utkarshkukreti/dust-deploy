@@ -7,7 +7,7 @@ class Deploy::Iptables < Thor
 
     servers.each do | server |
       next unless server.connect
-      server.install('iptables') unless server.package_installed?('iptables')
+      next unless server.install_package('iptables')
 
       # configure server using erb template
       template = ERB.new( File.read("templates/#{self.class.namespace}/iptables.erb"), nil, '%<>' )

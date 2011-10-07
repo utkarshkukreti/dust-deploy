@@ -122,10 +122,35 @@ module Dust
       end
       users
     end
+
+    # checks if one of the packages is installed
+    def package_installed? packages, quiet=false
+      packages = [ packages ] if packages.class == String
+
+      print " - checking if #{packages.join(' or ')} is installed" unless quiet
+
+      os = discover_os(true)
+      packages.each do |package|
+        case os
+        when "gentoo"
+          return Dust.print_result(true, quiet) unless exec("qlist -I #{package}")[:stdout].empty?
+        when "debian"
+          return Dust.print_result(true, quiet) unless exec("dpkg -s #{package} |grep 'install ok'")[:stdout].empty?
+        when "ubuntu"
+          return Dust.print_result(true, quiet) unless exec("dpkg -s #{package} |grep 'install ok'")[:stdout].empty?
+        when "centos"
+          return Dust.print_result(true, quiet) if exec("rpm -q #{package}")[:exit_code] == 0
+        end
+      end
+
+      Dust.print_result(false, quiet)
+    end
  
-    def install package, env="", quiet=false
+    def install_package package, env="", quiet=false
+      return true if package_installed? package, quiet
+
       print "   - installing #{package}" unless quiet
-  
+
       case discover_os(true)
       when "gentoo"
         Dust.print_result( exec("#{env} emerge #{package}")[:exit_code], quiet )
@@ -210,29 +235,6 @@ module Dust
     def file_exists? file, quiet=false
       print " - checking if #{file} is installed" unless quiet
       Dust.print_result( exec("test -e #{file}")[:exit_code], quiet )
-    end
-  
-    # checks if one of the packages is installed
-    def package_installed? packages, quiet=false
-      packages = [ packages ] if packages.class == String
-  
-      print " - checking if #{packages.join(' or ')} is installed" unless quiet
-  
-      os = discover_os(true)
-      packages.each do |package|
-        case os
-        when "gentoo"
-          return Dust.print_result(true, quiet) unless exec("qlist -I #{package}")[:stdout].empty?
-        when "debian"
-          return Dust.print_result(true, quiet) unless exec("dpkg -s #{package} |grep 'install ok'")[:stdout].empty?
-        when "ubuntu"
-          return Dust.print_result(true, quiet) unless exec("dpkg -s #{package} |grep 'install ok'")[:stdout].empty?
-        when "centos"
-          return Dust.print_result(true, quiet) if exec("rpm -q #{package}")[:exit_code] == 0
-        end
-      end
-  
-      Dust.print_result(false, quiet)
     end
   
     def restart_service service, quiet=false

@@ -35,7 +35,7 @@ class Deploy::Nginx < Thor
   private
   def deploy_config server, type
     next unless server.is_debian?
-    server.package_install('nginx') unless server.package_installed?('nginx')
+    next unless server.install_package('nginx')
 
     server.scp("templates/#{self.class.namespace}/#{type}/nginx.conf", '/etc/nginx/nginx.conf')
     server.scp("templates/#{self.class.namespace}/#{type}/flinc", '/etc/nginx/sites-available/flinc')

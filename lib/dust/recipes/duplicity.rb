@@ -62,12 +62,7 @@ class Deploy::Duplicity < Thor
       next if scenarios.empty?
       next unless server.connect
 
-      unless server.package_installed?('duplicity')
-        unless server.install('duplicity') 
-          puts
-          next
-        end
-      end
+      next unless server.install_package('duplicity') 
 
       scenarios.each do |title, scenario_config|
         puts " - deploying #{title}"
@@ -87,11 +82,7 @@ class Deploy::Duplicity < Thor
 
         # check whether we need ncftp
         if config['backend'].include?('ftp://')
-          print '  '
-          unless server.package_installed?('ncftp')
-            print '  '
-            server.install('ncftp')
-          end
+          server.install_package('ncftp')
         end
 
         # check if interval is correct   

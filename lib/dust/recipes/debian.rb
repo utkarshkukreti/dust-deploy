@@ -8,7 +8,7 @@ class Deploy::Debian < Thor
     servers.each do | server |
       next unless server.connect
       next unless server.is_debian?
-      server.install('unattended-upgrades') unless server.package_installed?('unattended-upgrades')
+      server.install_package('unattended-upgrades')
       server.scp("templates/#{self.class.namespace}/02periodic", '/etc/apt/apt.conf.d/02periodic')
 
       server.disconnect
