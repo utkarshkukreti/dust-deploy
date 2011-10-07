@@ -72,7 +72,11 @@ class Deploy::Duplicity < Thor
       scenarios.each do |title, scenario_config|
         puts " - deploying #{title}"
 
-        config = merge_with_defaults(global.merge(scenario_config), server)
+        if global
+          config = merge_with_defaults(global.merge(scenario_config), server)
+        else
+          config = merge_with_defaults(scenario_config, server)
+        end
 
         # check whether backend is specified, skip to next scenario if not
         unless config['backend']
@@ -158,7 +162,11 @@ class Deploy::Duplicity < Thor
           next unless title == server['hostname']
         end
 
-        config = merge_with_defaults(global.merge(scenario_config), server)
+        if global
+          config = merge_with_defaults(global.merge(scenario_config), server)
+        else
+          config = merge_with_defaults(scenario_config, server)
+        end
 
         next unless server.connect
         next unless server.package_installed?('duplicity')
