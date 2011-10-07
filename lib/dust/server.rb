@@ -34,7 +34,7 @@ module Dust
                                 :port => @attr['port'],
                                 :proxy => proxy } )
       rescue Exception
-        error_message = "coudln't connect to #{@attr['fqdn']}"
+        error_message = " - coudln't connect to #{@attr['fqdn']}"
         error_message += " (via socks5 proxy #{@attr['proxy']})" if proxy
         Dust.print_failed error_message
         return false
