@@ -82,7 +82,7 @@ module Dust
   
     def write target, text, quiet=false
       print " - deploying #{File.basename(target)}" unless quiet
-      Dust.print_result( exec("echo '#{text}' > #{target}")[:exit_code], quiet )
+      Dust.print_result( exec("cat << EOF > #{target}\n#{text}EOF")[:exit_code], quiet )
     end
   
     def scp source, destination, quiet=false
