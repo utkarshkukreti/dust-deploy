@@ -2,7 +2,6 @@
 
 require 'rubygems'
 require 'yaml'
-require 'erb'
 require 'thor'
 require 'thor/runner'
 require 'dust'

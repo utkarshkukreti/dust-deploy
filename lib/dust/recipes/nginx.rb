@@ -1,3 +1,5 @@
+require 'erb'
+
 class Deploy::Nginx < Thor
   namespace :nginx
 

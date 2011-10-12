@@ -1,3 +1,5 @@
+require 'erb'
+
 class Deploy::Duplicity < Thor
   namespace :duplicity
 

@@ -1,3 +1,5 @@
+require 'erb'
+
 class Deploy::Motd < Thor
   namespace :motd
 

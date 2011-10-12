@@ -1,3 +1,5 @@
+require 'erb'
+
 class Deploy::Iptables < Thor
   namespace :iptables
 
