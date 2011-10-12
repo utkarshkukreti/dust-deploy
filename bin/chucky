@@ -5,6 +5,14 @@ require 'yaml'
 require 'thor'
 require 'thor/group'
 
+class Hash
+  def merge_r h
+    self.merge! h do |key, old, new|
+      old.class == Hash ? old.merge_r(new) : new
+    end
+  end
+end
+
 class Deploy < Thor
 
   method_options :yaml => :string,
@@ -30,9 +38,7 @@ class Deploy < Thor
           template = YAML.load_file "nodes/#{file}.yaml"
 
           # inherit all recipes and all other data
-          node['recipes'] ||= Hash.new
-          node['recipes'] = template.delete('recipes').merge node['recipes'] if template['recipes']
-          node = template.merge node
+          node = template.merge_r node
         end
       end
 
