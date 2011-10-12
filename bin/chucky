@@ -1,0 +1,68 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'yaml'
+require 'thor'
+require 'thor/group'
+
+class Deploy < Thor
+
+  method_options :yaml => :string,
+                 :filter => :hash,
+                 :recipes => :array
+
+  desc 'deploy <hostname>|all', 'desc HERE'
+  def deploy host='all'
+
+    # if argument is 'all' select all nodes in nodes/ directory
+    # otherwise load host.yaml only
+    nodes = host == 'all' ? Dir['nodes/*.yaml'] : "nodes/#{host}.yaml"
+
+    nodes.each do |file|
+      node = YAML.load_file(file)
+
+      # if no hostname is given, this file is a template, continue
+      next unless node['hostname']
+
+      # inherit all templates
+      if node['inherits']
+        to_a( node.delete('inherits') ).each do |file|
+          template = YAML.load_file "nodes/#{file}.yaml"
+
+          # inherit all recipes and all other data
+          node['recipes'] ||= Hash.new
+          node['recipes'] = template.delete('recipes').merge node['recipes'] if template['recipes']
+          node = template.merge node
+        end
+      end
+
+      node['recipes'].each do |recipe, ingredients|
+        # in case --recipes was set, skip unwanted recipes
+        next unless options[:recipes].include?(recipe) if options[:recipes]
+       
+puts recipe
+puts ingredients.inspect
+puts 
+        # run this recipe.rb with giving all ingredients to it
+        #invoke "#{recipe}:start", [ node, ingredients ]
+      end
+
+      puts
+    end
+  end
+
+  private
+  def to_a element
+    return [ element ] if element.class == String
+    return element if element.class == Array
+    false
+  end
+
+end
+
+
+# require all recipes (system wide and in local ./recipes directory)
+#Dir[File.dirname(__FILE__) + '/../lib/dust/recipes/*.rb'].each { |file| require file }
+#Dir['./recipes/*.rb'].each { |file| require file }
+
+Deploy.start
