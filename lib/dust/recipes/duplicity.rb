@@ -1,4 +1,5 @@
 require 'erb'
+require 'yaml'
 
 class Deploy::Duplicity < Thor
   namespace :duplicity

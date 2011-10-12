@@ -1,3 +1,5 @@
+require 'yaml'
+
 class Deploy::Ssh < Thor
   namespace :ssh
 
