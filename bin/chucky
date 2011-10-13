@@ -3,8 +3,9 @@
 require 'rubygems'
 require 'yaml'
 require 'thor'
-require 'thor/group'
 
+# TODO:
+# source this out into a 'helpers.rb' or so
 class Hash
   def merge_r h
     self.merge! h do |key, old, new|
@@ -13,44 +14,57 @@ class Hash
   end
 end
 
-class Deploy < Thor
+
+class Chucky < Thor
 
   method_options :yaml => :string,
                  :filter => :hash,
                  :recipes => :array
 
-  desc 'deploy <hostname>|all', 'desc HERE'
+  desc 'deploy <host>|all', 'deploy all recipes to the node <host> or all defined nodes'
   def deploy host='all'
 
-    # if argument is 'all' select all nodes in nodes/ directory
-    # otherwise load host.yaml only
-    nodes = host == 'all' ? Dir['nodes/*.yaml'] : "nodes/#{host}.yaml"
+    # load the specified node.yaml for the host given as an argument.
+    # if the argument is 'all', select all nodes in the nodes directory
+    if host == 'all'
+      nodes = Dir['nodes/*.yaml']
+    else
+      nodes = "nodes/#{host}.yaml"
+    end
 
     nodes.each do |file|
       node = YAML.load_file(file)
 
-      # if no hostname is given, this file is a template, continue
+      # if there is not hostname field in the yaml file,
+      # treat this node file as a template, and skip to the next one
       next unless node['hostname']
-
-      # inherit all templates
+     
+      # look for the inherits field in the yaml file,
+      # and merge the templates recursively into this node
       if node['inherits']
         to_a( node.delete('inherits') ).each do |file|
           template = YAML.load_file "nodes/#{file}.yaml"
-
-          # inherit all recipes and all other data
           node = template.merge_r node
         end
       end
 
+      # create a new field with the fully qualified domain name
+      node['fqdn'] = node['hostname']
+      node['fqdn'] += '.' + node['domain'] if node['domain']
+
+      # skip this node if there are no recipes found
+      next unless node['recipes']
+
+      # call recipes for each recipe that is defined for this node
       node['recipes'].each do |recipe, ingredients|
         # in case --recipes was set, skip unwanted recipes
         next unless options[:recipes].include?(recipe) if options[:recipes]
        
-puts recipe
-puts ingredients.inspect
-puts 
-        # run this recipe.rb with giving all ingredients to it
-        #invoke "#{recipe}:start", [ node, ingredients ]
+        # runs the method with the recipe name, defined and included in recipe/*.rb
+        # this is still in progress, I also want to pass arguments to this subroutine,
+        # display help messages, and things like that. 
+        # thor can probably somehow take care of that, but I didn't find out yet.
+        self.send recipe.to_sym, node, ingredients
       end
 
       puts
@@ -58,6 +72,10 @@ puts
   end
 
   private
+  # takes a string or an array.
+  # if element is an array, it is returned as it is
+  # but returns [ string ] if element is a string
+  # returns false if element is neither a string nor an array
   def to_a element
     return [ element ] if element.class == String
     return element if element.class == Array
@@ -66,9 +84,8 @@ puts
 
 end
 
-
 # require all recipes (system wide and in local ./recipes directory)
-#Dir[File.dirname(__FILE__) + '/../lib/dust/recipes/*.rb'].each { |file| require file }
-#Dir['./recipes/*.rb'].each { |file| require file }
+Dir[File.dirname(__FILE__) + '/../lib/dust/recipes/*.rb'].each { |file| require file }
+Dir['./recipes/*.rb'].each { |file| require file }
 
-Deploy.start
+Chucky.start
