@@ -65,6 +65,9 @@ class Deploy < Thor
       node['recipes'].each do |recipe, ingredients|
         # in case --recipes was set, skip unwanted recipes
         next unless options[:recipes].include?(recipe) if options[:recipes]
+
+        # skip disabled recipes
+        next if ingredients == 'disabled'
         
         # this is still in progress, I also want to pass arguments to this subroutine,
         # display help messages, and things like that. 
