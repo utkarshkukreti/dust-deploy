@@ -56,19 +56,25 @@ class Deploy < Thor
       # skip this node if there are no recipes found
       next unless node['recipes']
 
+      # connect to server
+      server = Server.new node 
+      next unless server.connect
+
+        # runs the method with the recipe name, defined and included in recipe/*.rb
       # call recipes for each recipe that is defined for this node
       node['recipes'].each do |recipe, ingredients|
         # in case --recipes was set, skip unwanted recipes
         next unless options[:recipes].include?(recipe) if options[:recipes]
-       
-        # runs the method with the recipe name, defined and included in recipe/*.rb
+        
         # this is still in progress, I also want to pass arguments to this subroutine,
         # display help messages, and things like that. 
         # thor can probably somehow take care of that, but I didn't find out yet.
-        self.send recipe.to_sym, node, ingredients
+        puts "--- running recipe: #{recipe}"
+        self.send recipe.to_sym, server, ingredients
+        puts
       end
 
-      puts
+      server.disconnect
     end
   end
 
