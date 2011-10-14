@@ -38,7 +38,13 @@ module Dust
         error_message += " (via socks5 proxy #{@attr['proxy']})" if proxy
         Dust.print_failed error_message
         return false
-      end 
+      end
+
+      # collect system facts using puppets facter
+      install_package('facter') unless package_installed?('facter', true)
+
+      @attr.merge! YAML.load( exec('facter -y')[:stdout] )
+      
       true
     end
   
