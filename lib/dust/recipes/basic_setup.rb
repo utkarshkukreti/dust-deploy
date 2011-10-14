@@ -7,7 +7,7 @@ module Dust
       # install some basic packages
       node.install_package 'screen'
       node.install_package 'rsync'
-      node.install_package 'psmisc' if node.uses_apt?
+      node.install_package 'psmisc' if node.uses_apt? true
 
       if node.uses_rpm? true
         node.install_package 'vim-enhanced'
