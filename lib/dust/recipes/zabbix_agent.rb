@@ -13,20 +13,20 @@ module Dust
       Dust.print_ok
       
       # restart using new configuration
-      node.restart_service('zabbix-agent') if node['os'] == 'debian' or node['os'] == 'ubuntu'
-      node.restart_service('zabbix-agentd') if node['os'] == 'gentoo'
+      node.restart_service('zabbix-agent') if node.is_os? ['debian', 'ubuntu', 'centos'], true
+      node.restart_service('zabbix-agentd') if node.is_gentoo? true
     end
 
     # installs zabbix and its dependencies
     def install_zabbix node
 
-      if node['os'] == 'debian' or node['os'] == 'ubuntu'
+      if node.uses_apt? true
         return false unless node.install_package('zabbix-agent')
 
         # debsecan is needed for zabbix checks (security updates)
         return false unless node.install_package('debsecan')
 
-      elsif node['os'] == 'gentoo'
+      elsif node.uses_emerge? true
         return false unless node.install_package('zabbix', "USE=agent")
 
         # glsa-check (part of gentoolkit) is needed for zabbix checks (security updates)
@@ -45,7 +45,7 @@ module Dust
 
   def configure_postgres
 
-      next unless node['os'] == 'gentoo'
+      next unless node.is_gentoo?
       next unless node.package_installed?('postgresql-node')
 
       print ' - add zabbix system user to postgres group'

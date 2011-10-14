@@ -8,13 +8,13 @@ module Dust
       node.install_package('screen')
       node.install_package('rsync')
 
-      if node['os'] == 'centos'
+      if node.uses_rpm? true
         node.install_package('vim-enhanced')
       else
         node.install_package('vim')
       end
 
-      if node['os'] == 'debian' or node['os'] == 'ubuntu'
+      if node.uses_apt? true
         node.install_package('git-core')
       else
         node.install_package('git')

@@ -62,9 +62,6 @@ class Deploy < Thor
       server = Server.new node 
       next unless server.connect
 
-      # store the servers operating system
-      node['os'] = server.discover_os
-
       # runs the method with the recipe name, defined and included in recipe/*.rb
       # call recipes for each recipe that is defined for this node
       node['recipes'].each do |recipe, ingredients|

@@ -42,9 +42,8 @@ module Dust
 
       # collect system facts using puppets facter
       install_package('facter') unless package_installed?('facter', true)
-
       @attr.merge! YAML.load( exec('facter -y')[:stdout] )
-      
+
       true
     end
   
@@ -161,16 +160,12 @@ module Dust
 
       print " - checking if #{packages.join(' or ')} is installed" unless quiet
 
-      os = discover_os(true)
       packages.each do |package|
-        case os
-        when "gentoo"
+        if uses_apt? true
+          return Dust.print_result(true, quiet) unless exec("dpkg -s #{package} |grep 'install ok'")[:stdout].empty?
+        elsif uses_emerge? true
           return Dust.print_result(true, quiet) unless exec("qlist -I #{package}")[:stdout].empty?
-        when "debian"
-          return Dust.print_result(true, quiet) unless exec("dpkg -s #{package} |grep 'install ok'")[:stdout].empty?
-        when "ubuntu"
-          return Dust.print_result(true, quiet) unless exec("dpkg -s #{package} |grep 'install ok'")[:stdout].empty?
-        when "centos"
+        elsif uses_rpm? true
           return Dust.print_result(true, quiet) if exec("rpm -q #{package}")[:exit_code] == 0
         end
       end
@@ -182,81 +177,74 @@ module Dust
       return true if package_installed? package, quiet
 
       print "   - installing #{package}" unless quiet
-
-      case discover_os(true)
-      when "gentoo"
-        Dust.print_result( exec("#{env} emerge #{package}")[:exit_code], quiet )
-      when "debian"
-        Dust.print_result( exec("#{env} aptitude install -y #{package}")[:exit_code], quiet )
-      when "ubuntu"
-        Dust.print_result( exec("#{env} aptitude install -y #{package}")[:exit_code], quiet )
-      when "centos"
-        Dust.print_result( exec("#{env} yum install -y #{package}; rpm -q #{package}")[:exit_code], quiet )
+      if uses_apt? true
+        Dust.print_result exec("#{env} aptitude install -y #{package}")[:exit_code], quiet
+      elsif uses_emerge? true
+        Dust.print_result exec("#{env} emerge #{package}")[:exit_code], quiet
+      elsif uses_rpm? true
+        Dust.print_result exec("#{env} yum install -y #{package}; rpm -q #{package}")[:exit_code], quiet
       else
-        Dust.print_result(false, quiet)
+        Dust.print_result false, quiet
       end
     end
 
     def system_update quiet=false
       print " - installing system updates"
 
-      case discover_os(true)
-      when "gentoo"
-        Dust.print_result( exec("emerge -uND @world")[:exit_code], quiet )
-      when "debian"
-        Dust.print_result( exec("aptitude full-upgrade -y")[:exit_code], quiet )
-      when "ubuntu"
-        Dust.print_result( exec("aptitude full-upgrade -y")[:exit_code], quiet )
-      when "centos"
-        Dust.print_result( exec("yum upgrade -y")[:exit_code], quiet )
+      if uses_apt? true
+        Dust.print_result exec("aptitude full-upgrade -y")[:exit_code], quiet
+      elsif uses_emerge? true
+        Dust.print_result exec("emerge -uND @world")[:exit_code], quiet
+      elsif uses_rpm? true
+        Dust.print_result exec("yum upgrade -y")[:exit_code], quiet
       else
-        Dust.print_result(false, quiet)
+        Dust.print_result false, quiet
       end
     end
-  
-    def discover_os quiet=false
-      print " - determining os: " unless quiet
-      os = 'debian' if exec('test -e /etc/debian_version -a ! -e /etc/dpkg/origins/ubuntu')[:exit_code] == 0
-      os = 'ubuntu' if exec('test -e /etc/dpkg/origins/ubuntu')[:exit_code] == 0
-      os = 'gentoo' if exec('test -e /etc/gentoo-release')[:exit_code] == 0
-      os = 'centos' if exec('test -e /etc/redhat-release')[:exit_code] == 0
-   
-      if os
-        print os unless quiet
-        Dust.print_result(true, quiet)
-      else
-        os = ' unknown' unless quiet
-        Dust.print_result(false, quiet)
-      end
-      os
+
+    # determining the system packet manager has to be done without facter
+    # because it's used to find out whether facter is installed / install facter
+    def uses_apt? quiet=false
+      print " - determining whether node uses apt" unless quiet
+      Dust.print_result exec('test -e /etc/debian_version')[:exit_code] == 0, quiet
+    end
+
+    def uses_rpm? quiet=false
+      print " - determining whether node uses rpm" unless quiet
+      Dust.print_result exec('test -e /etc/redhat-release')[:exit_code] == 0, quiet
+    end
+
+    def uses_emerge? quiet=false
+      print " - determining whether node uses emerge" unless quiet
+      Dust.print_result exec('test -e /etc/gentoo-release')[:exit_code] == 0, quiet
     end
   
     def is_os? os_list, quiet=false
-      print " - checking if this machine runs either #{os_list.join(' or ')}" unless quiet
+      print " - checking if this machine runs #{os_list.join(' or ')}" unless quiet
       os_list.each do |os|
-        return Dust.print_result(true, quiet) if discover_os(true) == os 
+        return Dust.print_result(true, quiet) if @attr['operatingsystem'].downcase == os.downcase
       end
       Dust.print_result(false, quiet)
     end
   
     def is_debian? quiet=false
-      print " - checking if this machine runs debian" unless quiet
-      Dust.print_result( discover_os(true) == "debian", quiet )
+      is_os? [ 'debian' ], quiet
     end
   
     def is_ubuntu? quiet=false
-      print " - checking if this machine runs ubuntu" unless quiet
-      Dust.print_result( discover_os(true) == "ubuntu", quiet )
+      is_os? [ 'ubuntu' ], quiet
     end
   
     def is_gentoo? quiet=false
-      print " - checking if this machine runs gentoo" unless quiet
-      Dust.print_result( discover_os(true) == "gentoo", quiet )
+      is_os? [ 'gentoo' ], quiet
     end
   
     def is_centos? quiet=false
-      print " - checking if this machine runs centos" unless quiet
-      Dust.print_result( discover_os(true) == "centos", quiet )
+      is_os? [ 'centos' ], quiet
+    end
+  
+    def is_scientific? quiet=false
+      is_os? [ 'scientific' ], quiet
     end
   
     def is_executable? file, quiet=false
