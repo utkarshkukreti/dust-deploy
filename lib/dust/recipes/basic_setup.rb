@@ -5,19 +5,20 @@ module Dust
       template_path = "./templates/#{ File.basename(__FILE__).chomp( File.extname(__FILE__) ) }"
 
       # install some basic packages
-      node.install_package('screen')
-      node.install_package('rsync')
+      node.install_package 'screen'
+      node.install_package 'rsync'
+      node.install_package 'psmisc' if node.uses_apt?
 
       if node.uses_rpm? true
-        node.install_package('vim-enhanced')
+        node.install_package 'vim-enhanced'
       else
-        node.install_package('vim')
+        node.install_package 'vim'
       end
 
       if node.uses_apt? true
-        node.install_package('git-core')
+        node.install_package 'git-core'
       else
-        node.install_package('git')
+        node.install_package 'git'
       end
 
       # deploy basic configuration for root user
