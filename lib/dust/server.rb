@@ -83,17 +83,25 @@ module Dust
     def write target, text, quiet=false
       print " - deploying #{File.basename(target)}" unless quiet
       Dust.print_result( exec("cat << EOF > #{target}\n#{text}EOF")[:exit_code], quiet )
+      restorecon(target, quiet) # restore SELinux labels
     end
-  
+
+    def append target, text, quiet=false
+      print " - appending to #{File.basename(target)}" unless quiet
+      Dust.print_result( exec("cat << EOF >> #{target}\n#{text}EOF")[:exit_code], quiet )
+    end
+ 
     def scp source, destination, quiet=false
       print " - deploying #{File.basename(source)}" unless quiet
       @ssh.scp.upload!(source, destination)
       Dust.print_result(true, quiet)
+      restorecon(destination, quiet) # restore SELinux labels
     end
   
     def symlink source, destination, quiet=false
       print " - deploying #{File.basename(source)}" unless quiet
       Dust.print_result( exec("ln -s #{source} #{destination}")[:exit_code], quiet )
+      restorecon(destination, quiet) # restore SELinux labels
     end
   
     def chmod mode, file, quiet=false
@@ -114,6 +122,19 @@ module Dust
     def mkdir dir, quiet=false
       print " - creating directory #{dir}" unless quiet
       Dust.print_result( exec("mkdir -p #{dir}")[:exit_code], quiet )
+      restorecon(dir, quiet) # restore SELinux labels
+    end
+
+    # check if restorecon (selinux) is available
+    # if so, run it on "path" recursively
+    def restorecon path, quiet=false
+
+      # if restorecon is not installed, just return true
+      ret = exec('which restorecon')
+      return true unless ret[:exit_code] == 0
+
+      print " - restoring selinux labels for #{path}" unless quiet
+      Dust.print_result( exec("#{ret[:stdout].chomp} -R #{path}")[:exit_code], quiet )
     end
  
     def get_system_users quiet=false
