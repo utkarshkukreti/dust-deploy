@@ -1,6 +1,5 @@
-require 'dust/print_status.rb'
-require 'dust/dust.rb'
-require 'dust/server.rb'
+require 'dust/print_status'
+require 'dust/server'
 
 module Dust
 end
