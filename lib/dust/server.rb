@@ -84,7 +84,7 @@ module Dust
   
     def write target, text, quiet=false
       print " - deploying #{File.basename(target)}" unless quiet
-      Dust.print_result( exec("cat << EOF > #{target}\n#{text}EOF")[:exit_code], quiet )
+      Dust.print_result( exec("cat << EOF > #{target}\n#{text}\nEOF")[:exit_code], quiet )
       restorecon(target, quiet) # restore SELinux labels
     end
 
