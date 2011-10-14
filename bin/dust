@@ -10,7 +10,9 @@ require 'dust'
 class Hash
   def merge_r h
     self.merge! h do |key, old, new|
-      old.class == Hash ? old.merge_r(new) : new
+      # only merge if old and new are both hashes.
+      # otherwise just replace old with new
+      if old.class == Hash and new.class == Hash then old.merge_r new else new end
     end
   end
 end
