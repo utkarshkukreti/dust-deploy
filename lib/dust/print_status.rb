@@ -33,4 +33,8 @@ module Dust
   def self.print_hostname hostname
     puts "#{@green}#{hostname}#{@none}:"
   end
+
+  def self.print_recipe recipe
+    puts "#{@blue}#{recipe}#{@none} is being deployed:"
+  end
 end
