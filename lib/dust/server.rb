@@ -11,15 +11,12 @@ module Dust
       @attr = attr
   
       # store fully qualified domain name
-      if @attr.has_key?('domain')
-        @attr['fqdn'] = "#{@attr['hostname']}.#{@attr['domain']}" 
-      else
-        @attr['fqdn'] = @attr['hostname']
-      end
+      @attr['fqdn'] = @attr['hostname']
+      @attr['fqdn'] += '.' + @attr['domain'] if @attr['domain']
   
-      @attr['user'] = 'root' unless @attr.has_key?('user')
-      @attr['port'] = 22 unless @attr.has_key?('port')
-      @attr['password'] = '' unless @attr.has_key?('password')
+      @attr['user'] ||= 'root'
+      @attr['port'] ||= 22
+      @attr['password'] ||= ''
     end
 
     def connect 
