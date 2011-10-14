@@ -33,8 +33,8 @@ module Dust
       if config['backend'].include? 'scp://' and config['hostkey']
         print '   - checking if ssh key is in known_hosts'
         unless Dust.print_result node.exec("grep -q '#{config['hostkey']}' ~/.ssh/known_hosts")[:exit_code] == 0
-          print '   - adding host key to known_hosts'
-          Dust.print_result node.exec("mkdir ~/.ssh; echo '#{config['hostkey']}' >> ~/.ssh/known_hosts")[:exit_code]
+          node.mkdir '~/.ssh'
+          node.append '~/.ssh/known_hosts', config['hostkey']
         end
       end
 

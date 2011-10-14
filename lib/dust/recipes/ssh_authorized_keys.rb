@@ -28,17 +28,10 @@ module Dust
         end
 
         # check and create necessary directories
-        print " - checking whether ~#{remote_user}/.ssh exists"
-        unless Dust.print_result node.exec("test -d ~#{remote_user}/.ssh")[:exit_code]
-          print "   - creating ~#{remote_user}/.ssh"
-          unless Dust.print_result node.exec("mkdir ~#{remote_user}/.ssh")[:exit_code]
-            puts
-            next
-          end
-        end
+        return unless node.mkdir("~#{remote_user}/.ssh")
 
         # deploy authorized_keys
-        node.write "~#{remote_user}/.ssh/authorized_keys", authorized_keys
+        return node.write "~#{remote_user}/.ssh/authorized_keys", authorized_keys
 
         # check permissions
         node.chown "#{remote_user}:#{remote_user}", "~#{remote_user}/.ssh"
