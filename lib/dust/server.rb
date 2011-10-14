@@ -107,7 +107,7 @@ module Dust
     end
 
     def rm file, quiet=false
-      print " - deleting #{file}"
+      print " - deleting #{file}" unless quiet
       Dust.print_result( exec("rm -rf #{file}")[:exit_code], quiet)
     end
  
