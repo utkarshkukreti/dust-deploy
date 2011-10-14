@@ -31,7 +31,7 @@ module Dust
 
       # add hostkey to known_hosts
       if config['backend'].include? 'scp://' and config['hostkey']
-        print '   - checking if ssh key is in known_hosts'
+        Dust.print_msg 'checking if ssh key is in known_hosts', 2
         unless Dust.print_result node.exec("grep -q '#{config['hostkey']}' ~/.ssh/known_hosts")[:exit_code] == 0
           node.mkdir '~/.ssh'
           node.append '~/.ssh/known_hosts', config['hostkey']
@@ -44,7 +44,7 @@ module Dust
 
       # adjust and upload cronjob
       template = ERB.new File.read("#{template_path}/cronjob.erb"), nil, '%<>'
-      print "   - adjusting and deploying cronjob (interval: #{config['interval']})"
+      Dust.print_msg "adjusting and deploying cronjob (interval: #{config['interval']})", 2
       node.write cronjob_path, template.result(binding), true
       Dust.print_ok
 
@@ -54,7 +54,7 @@ module Dust
 
     # removes all duplicity cronjobs
     def remove_duplicity_cronjobs node
-      print ' - deleting old duplicity cronjobs'
+      Dust.print_msg 'deleting old duplicity cronjobs'
       node.rm '/etc/cron.*/duplicity*', true
       Dust.print_ok
     end

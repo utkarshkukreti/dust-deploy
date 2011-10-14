@@ -8,7 +8,7 @@ module Dust
 
       # configure node using erb template
       template = ERB.new File.read("#{template_path}/zabbix_agentd.conf.erb"), nil, '%<>'
-      print ' - adjusting and deploying zabbix_agentd.conf'
+      Dust.print_msg 'adjusting and deploying zabbix_agentd.conf'
       node.write '/etc/zabbix/zabbix_agentd.conf', template.result(binding), true
       Dust.print_ok
       
@@ -33,7 +33,7 @@ module Dust
         return false unless node.install_package('gentoolkit')
 
       else
-        print ' - os not supported'
+        Dust.print_msg 'os not supported'
         Dust.print_failed
         return false
       end
@@ -48,22 +48,22 @@ module Dust
       next unless node.is_gentoo?
       next unless node.package_installed?('postgresql-node')
 
-      print ' - add zabbix system user to postgres group'
+      Dust.print_msg 'add zabbix system user to postgres group'
       Dust.print_result( node.exec('usermod -a -G postgres zabbix')[:exit_code] )
 
-      print ' - checking if zabbix user exists in postgres'
+      Dust.print_msg 'checking if zabbix user exists in postgres'
       ret = Dust.print_result( node.exec('psql -U postgres -c ' +
                                              '  "SELECT usename FROM pg_user WHERE usename = \'zabbix\'"' +
                                              '  postgres |grep -q zabbix')[:exit_code] )
 
       # if user was not found, create him
       unless ret
-        print '   - create zabbix user in postgres'
+        Dust.print_msg 'create zabbix user in postgres', 2
         Dust.print_result( node.exec('createuser -U postgres zabbix -RSD')[:exit_code] )
       end
 
 # TODO: only GRANT is this is a master
-      print ' - GRANT zabbix user access to postgres database'
+      Dust.print_msg 'GRANT zabbix user access to postgres database'
       Dust.print_result( node.exec('psql -U postgres -c "GRANT SELECT ON pg_stat_database TO zabbix" postgres')[:exit_code] )
 
       # reload postgresql

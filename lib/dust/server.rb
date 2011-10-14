@@ -82,67 +82,67 @@ module Dust
       { :stdout => stdout, :stderr => stderr, :exit_code => exit_code, :exit_signal => exit_signal }
     end
   
-    def write target, text, quiet=false
-      print " - deploying #{File.basename(target)}" unless quiet
+    def write target, text, quiet=false, indent=1
+      Dust.print_msg("deploying #{File.basename(target)}", indent) unless quiet
       Dust.print_result( exec("cat << EOF > #{target}\n#{text}\nEOF")[:exit_code], quiet )
-      restorecon(target, quiet) # restore SELinux labels
+      restorecon(target, quiet, indent) # restore SELinux labels
     end
 
-    def append target, text, quiet=false
-      print " - appending to #{File.basename(target)}" unless quiet
+    def append target, text, quiet=false, indent=1
+      Dust.print_msg("appending to #{File.basename(target)}", indent) unless quiet
       Dust.print_result( exec("cat << EOF >> #{target}\n#{text}EOF")[:exit_code], quiet )
     end
  
-    def scp source, destination, quiet=false
-      print " - deploying #{File.basename(source)}" unless quiet
+    def scp source, destination, quiet=false, indent=1
+      Dust.print_msg("deploying #{File.basename(source)}", indent) unless quiet
       @ssh.scp.upload!(source, destination)
       Dust.print_result(true, quiet)
-      restorecon(destination, quiet) # restore SELinux labels
+      restorecon(destination, quiet, indent) # restore SELinux labels
     end
   
-    def symlink source, destination, quiet=false
-      print " - deploying #{File.basename(source)}" unless quiet
+    def symlink source, destination, quiet=false, indent=1
+      Dust.print_msg("deploying #{File.basename(source)}", indent) unless quiet
       Dust.print_result( exec("ln -s #{source} #{destination}")[:exit_code], quiet )
-      restorecon(destination, quiet) # restore SELinux labels
+      restorecon(destination, quiet, level) # restore SELinux labels
     end
   
-    def chmod mode, file, quiet=false
-      print " - setting mode of #{File.basename(file)} to #{mode}" unless quiet
+    def chmod mode, file, quiet=false, indent=1
+      Dust.print_msg("setting mode of #{File.basename(file)} to #{mode}", indent) unless quiet
       Dust.print_result( exec("chmod #{mode} #{file}")[:exit_code], quiet )
     end
 
-    def chown user, file, quiet=false
-      print " - setting owner of #{File.basename(file)} to #{user}" unless quiet
+    def chown user, file, quiet=false, indent=1
+      Dust.print_msg("setting owner of #{File.basename(file)} to #{user}", indent) unless quiet
       Dust.print_result( exec("chown -R #{user} #{file}")[:exit_code], quiet )
     end
 
-    def rm file, quiet=false
-      print " - deleting #{file}" unless quiet
+    def rm file, quiet=false, indent=1
+      Dust.print_msg("deleting #{file}", indent) unless quiet
       Dust.print_result( exec("rm -rf #{file}")[:exit_code], quiet)
     end
 
-    def mkdir dir, quiet=false
-      print " - creating directory #{dir}" unless quiet
-      Dust.print_result( exec("mkdir -p #{dir}")[:exit_code], quiet )
-      restorecon(dir, quiet) # restore SELinux labels
+    def mkdir dir, quiet=false, indent=1
+      Dust.print_msg("creating directory #{dir}", indent) unless quiet
+      Dust.print_result( exec("mkdir -p #{dir}")[:exit_code], quiet)
+      restorecon(dir, quiet, indent) # restore SELinux labels
     end
 
     # check if restorecon (selinux) is available
     # if so, run it on "path" recursively
-    def restorecon path, quiet=false
+    def restorecon path, quiet=false, indent=1
 
       # if restorecon is not installed, just return true
       ret = exec('which restorecon')
       return true unless ret[:exit_code] == 0
 
-      print " - restoring selinux labels for #{path}" unless quiet
+      Dust.print_msg("restoring selinux labels for #{path}", indent) unless quiet
       Dust.print_result( exec("#{ret[:stdout].chomp} -R #{path}")[:exit_code], quiet )
     end
  
     def get_system_users quiet=false
-      print " - getting all system users" unless quiet
+      Dust.print_msg("getting all system users", indent) unless quiet
       ret = exec('getent passwd |cut -d: -f1')
-      Dust.print_result ret[:exit_code], quiet
+      Dust.print_result ret[:exit_code]
 
       users = Array.new
       ret[:stdout].each do |user|
@@ -152,10 +152,10 @@ module Dust
     end
 
     # checks if one of the packages is installed
-    def package_installed? packages, quiet=false
+    def package_installed? packages, quiet=false, indent=1
       packages = [ packages ] if packages.class == String
 
-      print " - checking if #{packages.join(' or ')} is installed" unless quiet
+      Dust.print_msg("checking if #{packages.join(' or ')} is installed", indent) unless quiet
 
       packages.each do |package|
         if uses_apt? true
@@ -170,10 +170,10 @@ module Dust
       Dust.print_result(false, quiet)
     end
  
-    def install_package package, env="", quiet=false
+    def install_package package, env="", quiet=false, indent=2
       return true if package_installed? package, quiet
 
-      print "   - installing #{package}" unless quiet
+      Dust.print_msg("installing #{package}", indent) unless quiet
       if uses_apt? true
         Dust.print_result exec("#{env} aptitude install -y #{package}")[:exit_code], quiet
       elsif uses_emerge? true
@@ -185,8 +185,8 @@ module Dust
       end
     end
 
-    def system_update quiet=false
-      print " - installing system updates"
+    def system_update quiet=false, indent=1
+      Dust.print_msg("installing system updates", indent) unless quiet
 
       if uses_apt? true
         Dust.print_result exec("aptitude full-upgrade -y")[:exit_code], quiet
@@ -201,75 +201,75 @@ module Dust
 
     # determining the system packet manager has to be done without facter
     # because it's used to find out whether facter is installed / install facter
-    def uses_apt? quiet=false
-      print " - determining whether node uses apt" unless quiet
+    def uses_apt? quiet=false, indent=1
+      Dust.print_msg("determining whether node uses apt", indent) unless quiet
       Dust.print_result exec('test -e /etc/debian_version')[:exit_code] == 0, quiet
     end
 
-    def uses_rpm? quiet=false
-      print " - determining whether node uses rpm" unless quiet
+    def uses_rpm? quiet=false, indent=1
+      Dust.print_msg("determining whether node uses rpm", indent) unless quiet
       Dust.print_result exec('test -e /etc/redhat-release')[:exit_code] == 0, quiet
     end
 
-    def uses_emerge? quiet=false
-      print " - determining whether node uses emerge" unless quiet
+    def uses_emerge? quiet=false, indent=1
+      Dust.print_msg("determining whether node uses emerge", indent) unless quiet
       Dust.print_result exec('test -e /etc/gentoo-release')[:exit_code] == 0, quiet
     end
   
-    def is_os? os_list, quiet=false
-      print " - checking if this machine runs #{os_list.join(' or ')}" unless quiet
+    def is_os? os_list, quiet=false, indent=1
+      Dust.print_msg("checking if this machine runs #{os_list.join(' or ')}", indent) unless quiet
       os_list.each do |os|
         return Dust.print_result(true, quiet) if @attr['operatingsystem'].downcase == os.downcase
       end
       Dust.print_result(false, quiet)
     end
   
-    def is_debian? quiet=false
-      is_os? [ 'debian' ], quiet
+    def is_debian? quiet=false, indent=1
+      is_os? [ 'debian' ], quiet, indent
     end
   
-    def is_ubuntu? quiet=false
-      is_os? [ 'ubuntu' ], quiet
+    def is_ubuntu? quiet=false, indent=1
+      is_os? [ 'ubuntu' ], quiet, indent
     end
   
-    def is_gentoo? quiet=false
-      is_os? [ 'gentoo' ], quiet
+    def is_gentoo? quiet=false, indent=1
+      is_os? [ 'gentoo' ], quiet, indent
     end
   
-    def is_centos? quiet=false
-      is_os? [ 'centos' ], quiet
+    def is_centos? quiet=false, indent=1
+      is_os? [ 'centos' ], quiet, indent
     end
   
-    def is_scientific? quiet=false
-      is_os? [ 'scientific' ], quiet
+    def is_scientific? quiet=false, indent=1
+      is_os? [ 'scientific' ], quiet, indent
     end
   
-    def is_executable? file, quiet=false
-      print " - checking if #{file} is installed" unless quiet
+    def is_executable? file, quiet=false, indent=1
+      Dust.print_msg("checking if #{file} is installed", indent) unless quiet
       Dust.print_result( exec("test -x $(which #{file})")[:exit_code], quiet )
     end
   
-    def file_exists? file, quiet=false
-      print " - checking if #{file} is installed" unless quiet
+    def file_exists? file, quiet=false, indent=1
+      Dust.print_msg("checking if #{file} is installed", indent) unless quiet
       Dust.print_result( exec("test -e #{file}")[:exit_code], quiet )
     end
   
-    def restart_service service, quiet=false
-      print " - restarting #{service}" unless quiet 
+    def restart_service service, quiet=false, indent=1
+      Dust.print_msg("restarting #{service}", indent) unless quiet 
       Dust.print_result( exec("/etc/init.d/#{service} restart")[:exit_code], quiet )
     end
   
-    def reload_service service, quiet=false
-      print " - reloading #{service}" unless quiet
+    def reload_service service, quiet=false, indent=1
+      Dust.print_msg("reloading #{service}", indent) unless quiet
       Dust.print_result( exec("/etc/init.d/#{service} reload")[:exit_code], quiet )
     end
   
-    def qm_list name, quiet=false
+    def qm_list name, quiet=false, indent=1
       if name
-        print " - looking for a vm with name #{name}" unless quiet
+        Dust.print_msg("looking for a vm with name #{name}", indent) unless quiet
         ret = exec("qm list |grep #{name}")
       else
-        print " - looking for vms" unless quiet
+        Dust.print_msg("looking for vms", indent) unless quiet
         ret = exec('qm list |grep -v VMID')
       end 
   

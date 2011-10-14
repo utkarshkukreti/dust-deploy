@@ -14,7 +14,7 @@ module Dust
       threshold = convert_size '512 MB'
       max_mem = threshold if max_mem > threshold
 
-      print " - setting max memory for a process to #{max_mem} kb"
+      Dust.print_msg "setting max memory for a process to #{max_mem} kb"
       node.write '/etc/security/limits.d/00-memory-limit', "*          hard    as        #{max_mem}", true
       Dust.print_ok
     end

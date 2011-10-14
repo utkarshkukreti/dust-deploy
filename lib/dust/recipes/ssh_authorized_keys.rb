@@ -16,7 +16,7 @@ module Dust
 
         # create the authorized_keys hash for this user
         ssh_users.each do |ssh_user|
-          print "   - adding user #{users[ssh_user]['name']}"
+          Dust.print_msg "adding user #{users[ssh_user]['name']}", 2
           users[ssh_user]['keys'].each do |key|
             authorized_keys += "#{key}"
             authorized_keys += " #{users[ssh_user]['name']}" if users[ssh_user]['name']
@@ -45,8 +45,7 @@ module Dust
           node.get_system_users(true).each do |user|
             next if users.keys.include? user
             if node.file_exists? "~#{user}/.ssh/authorized_keys", true
-              print '  '
-              node.rm "~#{user}/.ssh/authorized_keys"
+              node.rm "~#{user}/.ssh/authorized_keys", 2
              end
           end
         end
