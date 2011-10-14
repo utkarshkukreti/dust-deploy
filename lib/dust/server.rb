@@ -110,6 +110,11 @@ module Dust
       print " - deleting #{file}" unless quiet
       Dust.print_result( exec("rm -rf #{file}")[:exit_code], quiet)
     end
+
+    def mkdir dir, quiet=false
+      print " - creating directory #{dir}" unless quiet
+      Dust.print_result( exec("mkdir -p #{dir}")[:exit_code], quiet )
+    end
  
     def get_system_users quiet=false
       print " - getting all system users" unless quiet
