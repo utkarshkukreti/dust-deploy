@@ -27,7 +27,7 @@ module Dust
         return false unless node.install_package('debsecan')
 
       elsif node.uses_emerge? true
-        return false unless node.install_package('zabbix', "USE=agent")
+        return false unless node.install_package('zabbix', false, 1, "USE=agent")
 
         # glsa-check (part of gentoolkit) is needed for zabbix checks (security updates)
         return false unless node.install_package('gentoolkit')

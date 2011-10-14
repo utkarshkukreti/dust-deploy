@@ -170,10 +170,10 @@ module Dust
       Dust.print_result(false, quiet)
     end
  
-    def install_package package, env="", quiet=false, indent=2
-      return true if package_installed? package, quiet
-
-      Dust.print_msg("installing #{package}", indent) unless quiet
+    def install_package package, quiet=false, indent=1, env=""
+      return true if package_installed? package, quiet, indent
+      
+      Dust.print_msg("installing #{package}", indent + 1) unless quiet
       if uses_apt? true
         Dust.print_result exec("#{env} aptitude install -y #{package}")[:exit_code], quiet
       elsif uses_emerge? true
