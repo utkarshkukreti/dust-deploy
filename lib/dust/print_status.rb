@@ -18,23 +18,36 @@ module Dust
     end
   end
 
-  def self.print_ok string=""
-    puts "#{string} #{@blue}[ ok ]#{@none}"
+  def self.print_ok string="", level=0
+    print_msg "#{string} #{@blue}[ ok ]#{@none}\n", level
   end
 
-  def self.print_failed string=""
-    puts "#{string} #{@red}[ failed ]#{@none}"
+  def self.print_failed string="", level=0
+    print_msg "#{string} #{@red}[ failed ]#{@none}\n", level
   end
 
-  def self.print_warning string=""
-    puts "#{string} #{@yellow}[ warning ]#{@none}"
+  def self.print_warning string="", level=0
+    print_msg "#{string} #{@yellow}[ warning ]#{@none}\n", level
   end
 
-  def self.print_hostname hostname
-    puts "#{@green}#{hostname}#{@none}:"
+  def self.print_hostname hostname, level=0
+    print_msg "\n[ #{@blue}#{hostname}#{@none} ]\n\n", level
   end
 
-  def self.print_recipe recipe
-    puts "#{@blue}#{recipe}#{@none} is being deployed:"
+  def self.print_recipe recipe, level=0
+    print_msg "#{@green}|#{recipe}|#{@none}\n", level
   end
+
+  # indent according to level
+  # level 0
+  #  - level 1
+  #    - level 2
+  def self.print_msg string, level=1
+    if level == 0
+      print string
+    else
+      print ' ' + '  ' * (level - 1) + '- ' + string
+    end
+  end
+
 end
