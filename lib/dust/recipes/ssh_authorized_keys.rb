@@ -28,10 +28,10 @@ module Dust
         end
 
         # check and create necessary directories
-        return unless node.mkdir("~#{remote_user}/.ssh")
+        next unless node.mkdir("~#{remote_user}/.ssh")
 
         # deploy authorized_keys
-        return node.write "~#{remote_user}/.ssh/authorized_keys", authorized_keys
+        next unless node.write "~#{remote_user}/.ssh/authorized_keys", authorized_keys
 
         # check permissions
         node.chown "#{remote_user}:#{remote_user}", "~#{remote_user}/.ssh"
@@ -49,6 +49,8 @@ module Dust
              end
           end
         end
+
+        puts
       end
     end
   end
