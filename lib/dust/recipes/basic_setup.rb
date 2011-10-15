@@ -22,7 +22,8 @@ module Dust
       else
         node.install_package 'git', false, 2
       end
-
+      puts
+    
       # deploy basic configuration for root user
       Dust.print_msg "deploying configuration files for root\n", 1
       Dir["#{template_path}/.*"].each do |file|
