@@ -3,44 +3,44 @@ require 'erb'
 module Dust
   class Deploy
     private
-    def nginx node, type
+    def nginx node, sites
       template_path = "./templates/#{ File.basename(__FILE__).chomp( File.extname(__FILE__) ) }"
 
       # abort if nginx cannot be installed
       return unless node.install_package('nginx')
 
-      Dir["#{template_path}/*"].each do |file|
-puts file
-        #node.scp("#{template_path}/nginx.conf", '/etc/nginx/nginx.conf')
-      end
+      node.scp("#{template_path}/nginx.conf", '/etc/nginx/nginx.conf')
 
+      # remove old sites that may be present
+      Dust.print_msg 'deleting old sites in /etc/nginx/sites-*'
+      node.rm '/etc/nginx/sites-*/*', true
+      Dust.print_ok
 
-      Dir["#{template_path}/#{type}/sites-enabled/*"].each do |file|
+      sites.each do |state, site|
+        file = "#{template_path}/sites/#{site}"
 
-        # render .erb files and write them to servers
-        if File.extname(file) == '.erb'
-          template = ERB.new File.read(file, nil, '%<>')
+        # if this site is just a regular file, copy it to sites-available
+        if File.exists? file
+          node.scp file, "/etc/nginx/sites-available/#{site}"
 
-          # remote the .erb from filename
-          target = File.basename(file).chomp( File.extname(file) )
-          node.write "/etc/nginx/sites-available/#{target}", template.result(binding)
+        # if this site is an erb template, render it and deploy
+        elsif File.exists? "#{file}.erb"
+          template = ERB.new( File.read("#{file}.erb"), nil, '%<>')
+          node.write "/etc/nginx/sites-available/#{site}", template.result(binding)
 
-        # other files will just be deployed
+        # skip to next site if template wasn't found
         else
-          node.scp file, "/etc/nginx/sites-enabled#{File.basename file}"
+          Dust.print_failed "couldn't find template for #{site}", 2
+          next
+        end
+
+        # symlink to sites-enabled if this is listed as an enabled site
+        if state == 'sites-enabled'
+          Dust.print_msg "enabling #{site}", 2
+          Dust.print_result( node.exec("cd /etc/nginx/sites-enabled && ln -s ../sites-available/#{site} #{site}")[:exit_code] )
         end
       end
 
-return
-
-      # enable node configuration via symlink
-      unless node.file_exists?('/etc/nginx/sites-enabled/proxy')
-        Dust.print_msg 'symlinking proxy to sites-enabled', 2
-        Dust.print_result( node.exec('cd /etc/nginx/sites-enabled && ln -s ../sites-available/proxy proxy')[:exit_code] )
-      end
-    end
-
-    def check_config node
       # check configuration and restart nginx
       Dust.print_msg 'checking nginx configuration'
       if node.exec('/etc/init.d/nginx configtest')[:exit_code] == 0
