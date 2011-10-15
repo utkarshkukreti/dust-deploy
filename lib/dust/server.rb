@@ -84,6 +84,11 @@ module Dust
   
     def write target, text, quiet=false, indent=1
       Dust.print_msg("deploying #{File.basename(target)}", indent) unless quiet
+
+      # escape $ signs and \ at the end of line
+      text.gsub!('$','\$')
+      text.gsub!(/\\$/, '\\\\\\')
+
       Dust.print_result( exec("cat << EOF > #{target}\n#{text}\nEOF")[:exit_code], quiet )
       restorecon(target, quiet, indent) # restore SELinux labels
     end
