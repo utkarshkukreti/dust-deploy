@@ -19,6 +19,7 @@ end
 
 module Dust
 class Deploy < Thor
+  @nodes  # loaded nodes will be stored in this array
 
   method_options :yaml => :string,
                  :filter => :hash,
@@ -26,35 +27,9 @@ class Deploy < Thor
 
   desc 'deploy <host>|all', 'deploy all recipes to the node <host> or all defined nodes'
   def deploy host='all'
+    load_servers host
 
-    # load the specified node.yaml for the host given as an argument.
-    # if the argument is 'all', select all nodes in the nodes directory
-    if host == 'all'
-      nodes = Dir['nodes/*.yaml']
-    else
-      nodes = "nodes/#{host}.yaml"
-    end
-
-    nodes.each do |file|
-      node = YAML.load_file(file)
-
-      # if there is not hostname field in the yaml file,
-      # treat this node file as a template, and skip to the next one
-      next unless node['hostname']
-     
-      # look for the inherits field in the yaml file,
-      # and merge the templates recursively into this node
-      if node['inherits']
-        to_a( node.delete('inherits') ).each do |file|
-          template = YAML.load_file "nodes/#{file}.yaml"
-          node = template.merge_r node
-        end
-      end
-
-      # create a new field with the fully qualified domain name
-      node['fqdn'] = node['hostname']
-      node['fqdn'] += '.' + node['domain'] if node['domain']
-
+    @nodes.each do |node|
       # skip this node if there are no recipes found
       next unless node['recipes']
 
@@ -84,6 +59,44 @@ class Deploy < Thor
   end
 
   private
+
+  # loads servers
+  def load_servers host='all'
+    @nodes = Array.new
+
+    # load the specified node.yaml for the host given as an argument.
+    # if the argument is 'all', select all nodes in the nodes directory
+    if host == 'all'
+      yaml_files = Dir['nodes/*.yaml']
+    else
+      yaml_files = "nodes/#{host}.yaml"
+    end
+
+    yaml_files.each do |file|
+      node = YAML.load_file(file)
+
+      # if there is not hostname field in the yaml file,
+      # treat this node file as a template, and skip to the next one
+      next unless node['hostname']
+  
+      # look for the inherits field in the yaml file,
+      # and merge the templates recursively into this node
+      if node['inherits']
+        to_a( node.delete('inherits') ).each do |file|
+          template = YAML.load_file "nodes/#{file}.yaml"
+          node = template.merge_r node
+        end
+      end
+
+      # create a new field with the fully qualified domain name
+      node['fqdn'] = node['hostname']
+      node['fqdn'] += '.' + node['domain'] if node['domain']
+
+      # add this node to the global node array
+      @nodes.push node
+    end
+  end
+
   # takes a string or an array.
   # if element is an array, it is returned as it is
   # but returns [ string ] if element is a string
