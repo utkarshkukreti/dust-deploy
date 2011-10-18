@@ -9,8 +9,6 @@ module Dust
       # configure node using erb template
       template = ERB.new File.read("#{template_path}/motd.erb"), nil, '%<>'
       node.write '/etc/motd', template.result(binding)
-
-      Dust.print_ok
     end
   end
 end
