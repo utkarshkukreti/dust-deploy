@@ -76,8 +76,8 @@ class Deploy < Thor
       ret = server.exec command
       Dust.print_result ret[:exit_code]
 
-      Dust.print_msg "#{ret[:stdout].chomp}\n", 0 if ret[:stdout].length > 0
-      Dust.print_msg "#{ret[:stderr].chomp}\n", 0 if ret[:stderr].length > 0
+      Dust.print_msg "#{Dust.black}#{ret[:stdout].chomp}#{Dust.none}\n", 0 if ret[:stdout].length > 0
+      Dust.print_msg "#{Dust.red(0)}#{ret[:stderr].chomp}#{Dust.none}\n", 0 if ret[:stderr].length > 0
       puts
     end
   end
