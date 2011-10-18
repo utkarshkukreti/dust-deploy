@@ -59,6 +59,32 @@ class Deploy < Thor
     end
   end
 
+
+  method_options :filter => :hash
+
+  desc 'exec command [--filter]', 'execute command on servers given with --filter option'
+  def exec command
+    load_servers
+    Dust.print_failed 'no servers match this filter' if @nodes.empty?
+
+    @nodes.each do |node|
+      # connect to server
+      server = Server.new node
+      next unless server.connect
+
+      Dust.print_recipe 'exec'
+
+      Dust.print_msg "executing command: '#{command}'"
+      ret = server.exec command
+      Dust.print_result ret[:exit_code]
+
+      Dust.print_msg "#{ret[:stdout].chomp}\n", 0 if ret[:stdout].length > 0
+      Dust.print_msg "#{ret[:stderr].chomp}\n", 0 if ret[:stderr].length > 0
+      puts
+    end
+  end
+
+
   private
 
   # loads servers
