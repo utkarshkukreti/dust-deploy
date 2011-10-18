@@ -21,8 +21,7 @@ module Dust
 class Deploy < Thor
   @nodes  # loaded nodes will be stored in this array
 
-  method_options :yaml => :string,
-                 :filter => :hash,
+  method_options :filter => :hash,
                  :recipes => :array
 
   desc 'deploy <host>|all', 'deploy all recipes to the node <host> or all defined nodes'
