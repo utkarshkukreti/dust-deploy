@@ -29,6 +29,8 @@ class Deploy < Thor
   def deploy host='all'
     load_servers host
 
+    Dust.print_failed 'no servers match this filter' if @nodes.empty?
+
     @nodes.each do |node|
       # skip this node if there are no recipes found
       next unless node['recipes']
@@ -93,8 +95,34 @@ class Deploy < Thor
       node['fqdn'] += '.' + node['domain'] if node['domain']
 
       # add this node to the global node array
-      @nodes.push node
+      @nodes.push node unless filtered? node
     end
+  end
+
+  # checks if this node was filtered out by command line argument
+  # e.g. --filter environment:staging filters out all machines but
+  # those in the environment staging
+  def filtered? node
+
+    # if filter is not specified, instantly return false
+    return false unless options[:filter]
+
+    # remove items if other filter arguments don't match
+    options[:filter].each do |k, v|
+      next unless v # skip empty filters
+
+      # filter if this node doesn't even have the attribute
+      return true unless node[k]
+
+      # allow multiple filters of the same type, divided by ','
+      # e.g. --filter environment:staging,production
+      return true unless v.split(',').include? node[k]
+
+      #return true if node[k] != v
+    end
+
+    # no filter matched, so this host is not filtered.
+    false
   end
 
   # takes a string or an array.
