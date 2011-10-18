@@ -24,9 +24,9 @@ class Deploy < Thor
   method_options :filter => :hash,
                  :recipes => :array
 
-  desc 'deploy <host>|all', 'deploy all recipes to the node <host> or all defined nodes'
-  def deploy host='all'
-    load_servers host
+  desc 'deploy [server.yaml]', 'deploy all recipes to the node(s) specified in server.yaml or to all nodes defined in ./nodes/'
+  def deploy yaml='all'
+    load_servers yaml
 
     Dust.print_failed 'no servers match this filter' if @nodes.empty?
 
@@ -88,15 +88,15 @@ class Deploy < Thor
   private
 
   # loads servers
-  def load_servers host='all'
+  def load_servers yaml='all'
     @nodes = Array.new
 
     # load the specified node.yaml for the host given as an argument.
     # if the argument is 'all', select all nodes in the nodes directory
     if host == 'all'
-      yaml_files = Dir['nodes/*.yaml']
+      yaml_files = Dir['nodes/**/*.yaml']
     else
-      yaml_files = "nodes/#{host}.yaml"
+      yaml_files = yaml
     end
 
     yaml_files.each do |file|
