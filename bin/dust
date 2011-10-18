@@ -19,7 +19,6 @@ end
 
 module Dust
 class Deploy < Thor
-  @nodes  # loaded nodes will be stored in this array
 
   method_options :filter => :hash,
                  :recipes => :array
@@ -73,7 +72,6 @@ class Deploy < Thor
       next unless server.connect
 
       Dust.print_recipe 'exec'
-
       Dust.print_msg "executing command: '#{command}'"
       ret = server.exec command
       Dust.print_result ret[:exit_code]
