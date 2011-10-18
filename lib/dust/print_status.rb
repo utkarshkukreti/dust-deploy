@@ -1,14 +1,14 @@
 module Dust
   # colors for terminal
-  def self.red;      "\033[1;31m"; end
-  def self.green;    "\033[1;32m"; end
-  def self.yellow;   "\033[1;33m"; end
-  def self.blue;     "\033[1;34m"; end
-  def self.pink;     "\033[1;35m"; end
-  def self.turquois; "\033[1;36m"; end
-  def self.grey;     "\033[1;37m"; end
-  def self.black;    "\033[1;38m"; end
-  def self.none;     "\033[0m"; end
+  def self.red thick=1;      "\033[#{thick};31m"; end
+  def self.green thick=1;    "\033[#{thick};32m"; end
+  def self.yellow thick=1;   "\033[#{thick};33m"; end
+  def self.blue thick=1;     "\033[#{thick};34m"; end
+  def self.pink thick=1;     "\033[#{thick};35m"; end
+  def self.turquois thick=1; "\033[#{thick};36m"; end
+  def self.grey thick=1;     "\033[#{thick};37m"; end
+  def self.black thick=1;    "\033[#{thick};38m"; end
+  def self.none;             "\033[0m"; end
 
   $stdout.sync = true # autoflush
 
