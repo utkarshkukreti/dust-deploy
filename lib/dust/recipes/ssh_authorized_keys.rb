@@ -11,7 +11,7 @@ module Dust
 
       authorized_keys = Hash.new
       ingredients.each do |remote_user, ssh_users|
-        puts " - generating authorized_keys for #{remote_user}"
+        Dust.print_msg "generating authorized_keys for #{remote_user}\n"
         authorized_keys = String.new
 
         # create the authorized_keys hash for this user
@@ -41,7 +41,7 @@ module Dust
         # TODO: add this option
         # remove authorized_keys files for all other users
         if options.cleanup?
-          puts ' - deleting other authorized_keys files'
+          Dust.print_msg "deleting other authorized_keys files\n"
           node.get_system_users(true).each do |user|
             next if users.keys.include? user
             if node.file_exists? "~#{user}/.ssh/authorized_keys", true
