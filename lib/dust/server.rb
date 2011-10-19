@@ -117,7 +117,7 @@ module Dust
   
     def chmod mode, file, quiet=false, indent=1
       Dust.print_msg("setting mode of #{File.basename(file)} to #{mode}", indent) unless quiet
-      Dust.print_result( exec("chmod #{mode} #{file}")[:exit_code], quiet )
+      Dust.print_result( exec("chmod -R #{mode} #{file}")[:exit_code], quiet )
     end
 
     def chown user, file, quiet=false, indent=1
