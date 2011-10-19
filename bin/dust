@@ -20,14 +20,10 @@ end
 module Dust
 class Deploy < Thor
 
-  method_options :filter => :hash,
-                 :recipes => :array
-
-  desc 'deploy [server.yaml]', 'deploy all recipes to the node(s) specified in server.yaml or to all nodes defined in ./nodes/'
+  desc 'deploy [server.yaml] [--filter] [--recipes]', 'deploy all recipes to the node(s) specified in server.yaml or to all nodes defined in ./nodes/'
+  method_options :filter => :hash, :recipes => :array
   def deploy yaml=''
-    load_servers yaml
-
-    Dust.print_failed 'no servers match this filter' if @nodes.empty?
+    Dust.print_failed 'no servers match this filter' if load_servers(yaml).empty?
 
     @nodes.each do |node|
       # skip this node if there are no recipes found
@@ -59,12 +55,10 @@ class Deploy < Thor
   end
 
 
-  method_options :filter => :hash
-
   desc 'exec command [--filter]', 'execute command on servers given with --filter option'
+  method_options :filter => :hash
   def exec command
-    load_servers
-    Dust.print_failed 'no servers match this filter' if @nodes.empty?
+    Dust.print_failed 'no servers match this filter' if load_servers.empty?
 
     @nodes.each do |node|
       # connect to server
