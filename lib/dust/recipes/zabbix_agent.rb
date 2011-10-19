@@ -1,3 +1,5 @@
+require 'erb'
+
 module Dust
   class Deploy
     private
