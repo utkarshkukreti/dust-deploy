@@ -106,7 +106,7 @@ module Dust
     end
   
     def symlink source, destination, quiet=false, indent=1
-      Dust.print_msg("deploying #{File.basename(source)}", indent) unless quiet
+      Dust.print_msg("symlinking #{File.basename(source)} to '#{destination}'", indent) unless quiet
       Dust.print_result( exec("ln -s #{source} #{destination}")[:exit_code], quiet )
       restorecon(destination, quiet, indent) # restore SELinux labels
     end
