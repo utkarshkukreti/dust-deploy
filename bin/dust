@@ -55,6 +55,41 @@ class Deploy < Thor
   end
 
 
+  desc 'status [server.yaml] [--recipes] [--filter]', 'run a recipe on a server'
+  method_options :filter => :hash, :recipes => :array, :long => :boolean
+  def status yaml=''
+    Dust.print_failed 'no servers match this filter' if load_servers(yaml).empty?
+
+    @nodes.each do |node|
+      # skip this node if there are no recipes found
+      next unless node['recipes']
+
+      # connect to server
+      server = Server.new node
+      next unless server.connect
+
+      # runs the method with the recipe name, defined and included in recipe/*.rb
+      # call recipes for each recipe that is defined for this node
+      node['recipes'].each do |recipe, ingredients|
+        # in case --recipes was set, skip unwanted recipes
+        next unless options[:recipes].include?(recipe) if options[:recipes]
+
+        # skip disabled recipes
+        next if ingredients == 'disabled'
+
+        # this is still in progress, I also want to pass arguments to this subroutine,
+        # display help messages, and things like that. 
+        # thor can probably somehow take care of that, but I didn't find out yet.
+        Dust.print_recipe recipe
+        self.send "#{recipe}_status".to_sym, server, ingredients
+        puts
+      end
+
+      server.disconnect
+    end
+  end
+
+
   desc 'exec command [--filter]', 'execute command on servers given with --filter option'
   method_options :filter => :hash
   def exec command
