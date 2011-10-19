@@ -108,7 +108,7 @@ module Dust
     def symlink source, destination, quiet=false, indent=1
       Dust.print_msg("deploying #{File.basename(source)}", indent) unless quiet
       Dust.print_result( exec("ln -s #{source} #{destination}")[:exit_code], quiet )
-      restorecon(destination, quiet, level) # restore SELinux labels
+      restorecon(destination, quiet, indent) # restore SELinux labels
     end
   
     def chmod mode, file, quiet=false, indent=1
