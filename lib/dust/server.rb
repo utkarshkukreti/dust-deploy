@@ -89,8 +89,10 @@ module Dust
       text.gsub!('$','\$')
       text.gsub!(/\\$/, '\\\\\\')
 
-      Dust.print_result( exec("cat << EOF > #{target}\n#{text}\nEOF")[:exit_code], quiet )
-      restorecon(target, quiet, indent) # restore SELinux labels
+      if exec("cat << EOF > #{target}\n#{text}\nEOF")[:exit_code] != 0
+        return Dust.print_result(false, quiet)
+      end
+      Dust.print_result restorecon(target, quiet, indent), quiet # restore SELinux labels
     end
 
     def append target, text, quiet=false, indent=1
@@ -107,8 +109,10 @@ module Dust
   
     def symlink source, destination, quiet=false, indent=1
       Dust.print_msg("symlinking #{File.basename(source)} to '#{destination}'", indent) unless quiet
-      Dust.print_result( exec("ln -s #{source} #{destination}")[:exit_code], quiet )
-      restorecon(destination, quiet, indent) # restore SELinux labels
+      if exec("ln -s #{source} #{destination}")[:exit_code] != 0
+        return Dust.print_result(false, quiet)
+      end
+      Dust.print_result restorecon(destination, quiet, indent), quiet # restore SELinux labels
     end
   
     def chmod mode, file, quiet=false, indent=1
@@ -128,8 +132,10 @@ module Dust
 
     def mkdir dir, quiet=false, indent=1
       Dust.print_msg("creating directory #{dir}", indent) unless quiet
-      Dust.print_result( exec("mkdir -p #{dir}")[:exit_code], quiet)
-      restorecon(dir, quiet, indent) # restore SELinux labels
+      if exec("mkdir -p #{dir}")[:exit_code] != 0
+        return Dust.print_result(false, quiet)
+      end
+      Dust.print_result restorecon(dir, quiet, indent), quiet # restore SELinux labels
     end
 
     # check if restorecon (selinux) is available
