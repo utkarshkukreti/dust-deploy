@@ -14,9 +14,10 @@ module Dust
       # return if config simply says 'remove'
       return if scenarios == 'remove'
 
-      scenarios.each do |scenario, config|
-        # if hosts and directory config options are not given, use hostname of this node
-        config['hosts'] ||= [ node['hostname'] ]
+      scenarios.each do |scenario, conf|
+        config = conf.clone
+
+        # if directory config options is not given, use hostname-scenario
         config['directory'] ||= "#{node['hostname']}-#{scenario}"
 
         # check whether backend is specified, skip to next scenario if not
@@ -60,10 +61,10 @@ module Dust
 
       template_path = "./templates/#{ File.basename(__FILE__).chomp( File.extname(__FILE__) ) }"
 
-      scenarios.each do |scenario, config|
+      scenarios.each do |scenario, conf|
+        config = conf.clone
 
-        # if hosts and directory config options are not given, use hostname of this node
-        config['hosts'] ||= [ node['hostname'] ]
+        # if directory config option is not given, use hostname-scenario
         config['directory'] ||= "#{node['hostname']}-#{scenario}"
 
         # check whether backend is specified, skip to next scenario if not
