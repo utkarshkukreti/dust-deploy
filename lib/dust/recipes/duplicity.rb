@@ -44,7 +44,7 @@ module Dust
 
       # adjust and upload cronjob
       template = ERB.new File.read("#{template_path}/cronjob.erb"), nil, '%<>'
-      Dust.print_msg "adjusting and deploying cronjob (interval: #{config['interval']})", 2
+      Dust.print_msg "adjusting and deploying cronjob (interval: #{config['interval']})"
       node.write cronjob_path, template.result(binding), true
       Dust.print_ok
 
