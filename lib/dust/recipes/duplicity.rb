@@ -4,7 +4,7 @@ module Dust
   class Deploy
     private
 
-    # sets the system locale
+    # configures and deploy duplicity cronjob
     def duplicity node, config
       template_path = "./templates/#{ File.basename(__FILE__).chomp( File.extname(__FILE__) ) }"
 
@@ -51,6 +51,37 @@ module Dust
       # making cronjob executeable
       node.chmod '0700', cronjob_path
     end
+
+
+    # print duplicity-status
+    def duplicity_status node, config
+
+      template_path = "./templates/#{ File.basename(__FILE__).chomp( File.extname(__FILE__) ) }"
+
+      # if hosts and directory config options are not given, use hostname of this node
+      config['hosts'] ||= [ node['hostname'] ]
+      config['directory'] ||= node['hostname']
+
+      # check whether backend is specified, skip to next scenario if not
+      return Dust.print_failed 'no backend specified.' unless config['backend']
+
+      Dust.print_msg 'running collection-status'
+      cmd = "nice -n #{config['nice']} duplicity collection-status " +
+            "--archive-dir #{config['archive']} " +
+            "#{File.join(config['backend'], config['directory'])}"
+
+      cmd += " |tail -n3 |head -n1" unless options.long?
+
+      ret = node.exec cmd
+      Dust.print_result(ret[:exit_code])
+
+      if options.long?
+        Dust.print_msg "#{Dust.black}#{ret[:stdout]}#{Dust.none}", 0
+      else
+        Dust.print_msg "\t#{Dust.black}#{ret[:stdout].sub(/^\s+([a-zA-Z]+)\s+(\w+\s\w+\s\d+\s\d+:\d+:\d+\s\d+)\s+(\d+)$/, 'Last backup: \1 (\3 sets) on \2')}#{Dust.none}", 0
+      end
+    end
+
 
     # removes all duplicity cronjobs
     def remove_duplicity_cronjobs node
