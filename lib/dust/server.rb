@@ -97,7 +97,7 @@ module Dust
 
     def append target, text, quiet=false, indent=1
       Dust.print_msg("appending to #{File.basename(target)}", indent) unless quiet
-      Dust.print_result( exec("cat << EOF >> #{target}\n#{text}EOF")[:exit_code], quiet )
+      Dust.print_result( exec("cat << EOF >> #{target}\n#{text}\nEOF")[:exit_code], quiet )
     end
  
     def scp source, destination, quiet=false, indent=1
