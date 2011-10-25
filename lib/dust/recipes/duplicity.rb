@@ -21,7 +21,10 @@ module Dust
         config['directory'] ||= "#{node['hostname']}-#{scenario}"
 
         # check whether backend is specified, skip to next scenario if not
-        return Dust.print_failed 'no backend specified.' unless config['backend']
+        unless config['backend'] and config['passphrase']
+          Dust.print_failed "scenario #{scenario}: backend or passphrase missing.", 1
+          next
+        end
 
         # check if interval is correct   
         unless [ 'monthly', 'weekly', 'daily', 'hourly' ].include? config['interval']
