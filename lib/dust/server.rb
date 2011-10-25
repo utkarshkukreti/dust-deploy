@@ -24,7 +24,7 @@ module Dust
       begin
         # connect to proxy if given
         proxy = @attr.has_key?('proxy') ? Net::SSH::Proxy::SOCKS5.new( @attr['proxy'].split(':')[0],
-                                                                        @attr['proxy'].split(':')[1] ) : nil
+                                                                       @attr['proxy'].split(':')[1] ) : nil
  
         @ssh = Net::SSH.start(@attr['fqdn'], @attr['user'],
                               { :password => @attr['password'],
