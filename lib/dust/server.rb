@@ -196,8 +196,22 @@ module Dust
       end
     end
 
+    def update_repos quiet=false, indent=1
+      Dust.print_msg('updating system repositories', indent) unless quiet
+      if uses_apt? true
+        Dust.print_result exec('aptitude update')[:exit_code], quiet
+      elsif uses_emerge? true
+        Dust.print_result exec('emerge --sync')[:exit_code], quiet
+      elsif uses_rpm? true
+        Dust.print_result exec('yum check-update')[:exit_code], quiet
+      else
+        Dust.print_result false, quiet
+      end
+
+    end
+
     def system_update quiet=false, indent=1
-      Dust.print_msg("installing system updates", indent) unless quiet
+      Dust.print_msg('installing system updates', indent) unless quiet
 
       if uses_apt? true
         Dust.print_result exec("aptitude full-upgrade -y")[:exit_code], quiet
