@@ -92,7 +92,9 @@ module Dust
       if exec("cat << EOF > #{target}\n#{text}\nEOF")[:exit_code] != 0
         return Dust.print_result(false, quiet)
       end
-      Dust.print_result restorecon(target, quiet, indent), quiet # restore SELinux labels
+
+      Dust.print_ok unless quiet
+      restorecon(target, quiet, indent) # restore SELinux labels
     end
 
     def append target, text, quiet=false, indent=1
@@ -112,7 +114,9 @@ module Dust
       if exec("ln -s #{source} #{destination}")[:exit_code] != 0
         return Dust.print_result(false, quiet)
       end
-      Dust.print_result restorecon(destination, quiet, indent), quiet # restore SELinux labels
+
+      Dust.print_ok unless quiet
+      restorecon(destination, quiet, indent) # restore SELinux labels
     end
   
     def chmod mode, file, quiet=false, indent=1
@@ -135,7 +139,9 @@ module Dust
       if exec("mkdir -p #{dir}")[:exit_code] != 0
         return Dust.print_result(false, quiet)
       end
-      Dust.print_result restorecon(dir, quiet, indent), quiet # restore SELinux labels
+
+      Dust.print_ok unless quiet
+      restorecon(dir, quiet, indent) # restore SELinux labels
     end
 
     # check if restorecon (selinux) is available
