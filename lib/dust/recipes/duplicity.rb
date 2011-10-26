@@ -81,7 +81,9 @@ module Dust
         cmd += " |tail -n3 |head -n1" unless options.long?
 
         ret = node.exec cmd
-        Dust.print_result(ret[:exit_code])
+
+        # check exit code and stdout shouldn't be empty
+        Dust.print_result( (ret[:exit_code] == 0 and ret[:stdout].length > 0) )
 
         if options.long?
           Dust.print_msg "#{Dust.black}#{ret[:stdout]}#{Dust.none}", 0
