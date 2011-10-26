@@ -8,6 +8,8 @@ module Dust
     def duplicity node, scenarios
       template_path = "./templates/#{ File.basename(__FILE__).chomp( File.extname(__FILE__) ) }"
 
+      return unless node.install_package 'duplicity'
+
       # clear all other duplicity cronjobs that might have been deployed earlier
       remove_duplicity_cronjobs node
 
@@ -61,8 +63,9 @@ module Dust
 
     # print duplicity-status
     def duplicity_status node, scenarios
-
       template_path = "./templates/#{ File.basename(__FILE__).chomp( File.extname(__FILE__) ) }"
+
+      return unless node.package_installed? 'duplicity'
 
       scenarios.each do |scenario, conf|
         config = conf.clone
