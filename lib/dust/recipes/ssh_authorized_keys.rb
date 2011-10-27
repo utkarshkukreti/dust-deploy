@@ -27,6 +27,9 @@ module Dust
           Dust.print_ok
         end
 
+        # create user, if not existent
+        next unless node.create_user remote_user
+
         # check and create necessary directories
         next unless node.mkdir("~#{remote_user}/.ssh")
 
