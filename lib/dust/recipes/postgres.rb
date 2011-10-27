@@ -19,6 +19,10 @@ module Dust
       deploy_file node, 'pg_hba.conf', "#{config['conf-dir']}/pg_hba.conf"
       deploy_file node, 'pg_ident.conf', "#{config['conf-dir']}/pg_ident.conf"
 
+      node.chmod '644', "#{config['conf-dir']}/postgresql.conf"
+      node.chmod '644', "#{config['conf-dir']}/pg_hba.conf"
+      node.chmod '644', "#{config['conf-dir']}/pg_ident.conf"
+
       # deploy pacemaker script
       if node.package_installed? 'pacemaker'
         deploy_file node, 'pacemaker.sh', "#{config['conf-dir']}/pacemaker.sh"
