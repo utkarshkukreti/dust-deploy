@@ -311,6 +311,22 @@ module Dust
       return ''
     end
 
+    # check whether a user exists on this node
+    def user_exists? user, quiet=false, indent=1
+      Dust.print_msg "checking if user #{user} exists", indent unless quiet
+      Dust.print_result( exec("id #{user}")[:exit_code], quiet )
+    end
+
+    # create a user
+    def create_user user, home=nil, shell=nil, quiet=false, indent=1
+      return true if user_exists? user, quiet, indent
+
+      Dust.print_msg "creating user #{user}", indent + 1 unless quiet
+      cmd = "useradd #{user} -m"
+      cmd += " -d #{home}" if home
+      cmd += " -s #{home}" if shell
+      Dust.print_result( exec(cmd)[:exit_code], quiet ) 
+    end
 
     private
 
