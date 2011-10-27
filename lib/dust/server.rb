@@ -189,14 +189,14 @@ module Dust
  
     def install_package package, quiet=false, indent=1, env=""
       return true if package_installed? package, quiet, indent
-      
+
       Dust.print_msg("installing #{package}", indent + 1) unless quiet
       if uses_apt? true
-        Dust.print_result exec("#{env} aptitude install -y #{package}")[:exit_code], quiet
+        Dust.print_result exec("DEBIAN_FRONTEND=noninteractive aptitude install -y #{package}")[:exit_code], quiet
       elsif uses_emerge? true
         Dust.print_result exec("#{env} emerge #{package}")[:exit_code], quiet
       elsif uses_rpm? true
-        Dust.print_result exec("#{env} yum install -y #{package}; rpm -q #{package}")[:exit_code], quiet
+        Dust.print_result exec("yum install -y #{package}; rpm -q #{package}")[:exit_code], quiet
       else
         Dust.print_result false, quiet
       end
@@ -205,7 +205,7 @@ module Dust
     def update_repos quiet=false, indent=1
       Dust.print_msg('updating system repositories', indent) unless quiet
       if uses_apt? true
-        Dust.print_result exec('aptitude update')[:exit_code], quiet
+        Dust.print_result exec('DEBIAN_FRONTEND=noninteractive aptitude update')[:exit_code], quiet
       elsif uses_emerge? true
         Dust.print_result exec('emerge --sync')[:exit_code], quiet
       elsif uses_rpm? true
@@ -220,11 +220,11 @@ module Dust
       Dust.print_msg('installing system updates', indent) unless quiet
 
       if uses_apt? true
-        Dust.print_result exec("aptitude full-upgrade -y")[:exit_code], quiet
+        Dust.print_result exec('DEBIAN_FRONTEND=noninteractive aptitude full-upgrade -y')[:exit_code], quiet
       elsif uses_emerge? true
-        Dust.print_result exec("emerge -uND @world")[:exit_code], quiet
+        Dust.print_result exec('emerge -uND @world')[:exit_code], quiet
       elsif uses_rpm? true
-        Dust.print_result exec("yum upgrade -y")[:exit_code], quiet
+        Dust.print_result exec('yum upgrade -y')[:exit_code], quiet
       else
         Dust.print_result false, quiet
       end
