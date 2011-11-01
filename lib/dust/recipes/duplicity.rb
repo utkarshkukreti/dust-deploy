@@ -94,7 +94,7 @@ module Dust
         if options.long?
           Dust.print_msg "#{Dust.black}#{ret[:stdout]}#{Dust.none}", 0
         else
-          Dust.print_msg "\t#{Dust.black}#{ret[:stdout].sub(/^\s+([a-zA-Z]+)\s+(\w+\s\w+\s\d+\s\d+:\d+:\d+\s\d+)\s+(\d+)$/, 'Last backup: \1 (\3 sets) on \2')}#{Dust.none}", 0
+          Dust.print_msg "\t#{Dust.black}#{ret[:stdout].sub(/^\s+([a-zA-Z]+)\s+(\w+\s+\w+\s+\d+\s+\d+:\d+:\d+\s+\d+)\s+(\d+)$/, 'Last backup: \1 (\3 sets) on \2')}#{Dust.none}", 0
         end
 
         puts
