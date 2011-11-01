@@ -135,6 +135,7 @@ module Dust
     end
 
     def mkdir dir, quiet=false, indent=1
+      return true if dir_exists? dir, true
       Dust.print_msg("creating directory #{dir}", indent) unless quiet
       if exec("mkdir -p #{dir}")[:exit_code] != 0
         return Dust.print_result(false, quiet)
@@ -276,13 +277,18 @@ module Dust
     end
   
     def is_executable? file, quiet=false, indent=1
-      Dust.print_msg("checking if #{file} is installed", indent) unless quiet
+      Dust.print_msg("checking if file #{file} exists and is executeable", indent) unless quiet
       Dust.print_result( exec("test -x $(which #{file})")[:exit_code], quiet )
     end
   
     def file_exists? file, quiet=false, indent=1
-      Dust.print_msg("checking if #{file} is installed", indent) unless quiet
+      Dust.print_msg("checking if file #{file} exists", indent) unless quiet
       Dust.print_result( exec("test -e #{file}")[:exit_code], quiet )
+    end
+
+    def dir_exists? dir, quiet=false, indent=1
+      Dust.print_msg("checking if directory #{dir} exists", indent) unless quiet
+      Dust.print_result( exec("test -d #{dir}")[:exit_code], quiet )
     end
   
     def restart_service service, quiet=false, indent=1
