@@ -35,7 +35,7 @@ module Dust
         return false unless node.install_package('gentoolkit')
 
       elsif node.uses_rpm? true
-        return false unless node.inspall_package('zabbix-agent')
+        return false unless node.install_package('zabbix-agent')
 
       else
         Dust.print_msg 'os not supported'
