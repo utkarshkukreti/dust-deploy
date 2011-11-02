@@ -150,7 +150,7 @@ class Deploy < Thor
       # look for the inherits field in the yaml file,
       # and merge the templates recursively into this node
       if node['inherits']
-        to_a( node.delete('inherits') ).each do |file|
+        node.delete('inherits').each do |file|
           template = YAML.load_file "./nodes/#{file}.yaml"
           node = template.merge_r node
         end
@@ -202,17 +202,6 @@ class Deploy < Thor
     # no filter matched, so this host is not filtered.
     false
   end
-
-  # takes a string or an array.
-  # if element is an array, it is returned as it is
-  # but returns [ string ] if element is a string
-  # returns false if element is neither a string nor an array
-  def to_a element
-    return [ element ] if element.class == String
-    return element if element.class == Array
-    false
-  end
-
 end
 
 # require all recipes (system wide and in local ./recipes directory)
