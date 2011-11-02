@@ -162,7 +162,7 @@ module Dust
       ret = exec('getent passwd |cut -d: -f1')
       Dust.print_result ret[:exit_code]
 
-      users = Array.new
+      users = []
       ret[:stdout].each do |user|
         users.push user.chomp
       end

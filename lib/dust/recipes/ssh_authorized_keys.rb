@@ -9,10 +9,10 @@ module Dust
       # load users and their ssh keys from yaml file
       users = YAML.load_file "#{template_path}/users.yaml"
 
-      authorized_keys = Hash.new
+      authorized_keys = {}
       ingredients.each do |remote_user, ssh_users|
         Dust.print_msg "generating authorized_keys for #{remote_user}\n"
-        authorized_keys = String.new
+        authorized_keys = ''
 
         # create the authorized_keys hash for this user
         ssh_users.each do |ssh_user|

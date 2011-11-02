@@ -120,7 +120,7 @@ class Deploy < Thor
 
   # loads servers
   def load_servers yaml=''
-    @nodes = Array.new
+    @nodes = []
 
     # if the argument is empty, load all yaml files in the ./nodes/ directory
     # if the argument is a directory, load yaml files in this directory

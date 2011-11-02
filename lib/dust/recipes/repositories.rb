@@ -13,7 +13,7 @@ module Dust
           puts
 
           # if repo is present but not a hash use defaults
-          repo = Hash.new unless repo.class == Hash
+          repo = {} unless repo.class == Hash
 
           # setting defaults
           repo['url'] ||= 'http://ftp.debian.org/debian/' if node.is_debian? true
@@ -26,7 +26,7 @@ module Dust
           if name == 'default'
             Dust.print_msg 'deploying default repository'
 
-            sources = String.new
+            sources = ''
             sources += "deb #{repo['url']} #{repo['release']} #{repo['components']}\n" +
                        "deb-src #{repo['url']} #{repo['release']} #{repo['components']}\n\n"
 

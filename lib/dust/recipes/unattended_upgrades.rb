@@ -8,7 +8,7 @@ module Dust
       return unless node.is_os? [ 'debian', 'ubuntu' ]
       node.install_package 'unattended-upgrades'
 
-      config = Hash.new unless config.class == Hash
+      config = {} unless config.class == Hash
 
       # set defaults for non-set config
       config['enable'] ||= 1
@@ -18,7 +18,7 @@ module Dust
       config['verbose'] ||= 0
 
       # generate configuration file
-      periodic = String.new
+      periodic = ''
       periodic += "APT::Periodic::Enable \"#{config['enable']}\";\n"
       periodic += "APT::Periodic::Update-Package-Lists \"#{config['update-package-lists']}\";\n"
       periodic += "APT::Periodic::Unattended-Upgrade \"#{config['unattended-upgrade']}\";\n"

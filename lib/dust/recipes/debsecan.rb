@@ -10,14 +10,14 @@ module Dust
         Dust.print_msg 'configuring debsecan'
 
         # if config is simply set to "true", use defaults
-        config = Hash.new unless config.class == Hash
+        config = {} unless config.class == Hash
 
         # setting default config variables (unless already set)
         config['report'] ||= false
         config['mailto'] ||= 'root'
         config['source'] ||= ''
 
-        config_file = String.new
+        config_file = ''
 
         # configures whether daily reports are sent
         config_file += "# If true, enable daily reports, sent by email.\n" +
