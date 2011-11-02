@@ -5,15 +5,22 @@ require 'yaml'
 require 'thor'
 require 'dust'
 
-# TODO:
-# source this out into a 'helpers.rb' or so
+# stole this from rails
+# https://github.com/rails/rails/blob/c0262827cacc1baf16668af65c35a09138166394/activesupport/lib/active_support/core_ext/hash/deep_merge.rb
 class Hash
-  def merge_r h
-    self.merge! h do |key, old, new|
-      # only merge if old and new are both hashes.
-      # otherwise just replace old with new
-      if old.class == Hash and new.class == Hash then old.merge_r new else new end
+  # Returns a new hash with +self+ and +other_hash+ merged recursively.
+  def deep_merge(other_hash)
+    dup.deep_merge!(other_hash)
+  end
+
+  # Returns a new hash with +self+ and +other_hash+ merged recursively.
+  # Modifies the receiver in place.
+  def deep_merge!(other_hash)
+    other_hash.each_pair do |k,v|
+      tv = self[k]
+      self[k] = tv.is_a?(Hash) && v.is_a?(Hash) ? tv.deep_merge(v) : v
     end
+    self
   end
 end
 
@@ -150,10 +157,12 @@ class Deploy < Thor
       # look for the inherits field in the yaml file,
       # and merge the templates recursively into this node
       if node['inherits']
+        inherited = {}
         node.delete('inherits').each do |file|
           template = YAML.load_file "./nodes/#{file}.yaml"
-          node = template.merge_r node
+          inherited.deep_merge! template
         end
+        node = inherited.deep_merge node
       end
 
       # if more than one hostname is specified, create a node
