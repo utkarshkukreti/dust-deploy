@@ -51,6 +51,28 @@ module Dust
           Dust.print_msg 'saving ipv6 rules'
           Dust.print_result node.exec('/etc/init.d/ip6tables save')[:exit_code]
         end
+
+      elsif node.is_os? [ 'centos', 'scientific' ], true
+        node.install_package 'iptables'
+        node.install_package 'iptables-ipv6'
+
+        target = '/etc/sysconfig/iptables'
+
+        Dust.print_msg 'configuring and deploying firewall'
+
+        # configure node using erb template
+        template = ERB.new File.read("#{template_path}/iptables_centos.erb"), nil, '%<>'
+        node.write target, template.result(binding), true
+        Dust.print_ok
+
+        node.chmod '600', target
+
+        Dust.print_msg 'applying ipv4 firewall rules'
+        Dust.print_result node.exec('/etc/init.d/iptables restart')[:exit_code]
+        # TODO: install ipv6 rules as well (using second template?)
+        #Dust.print_msg 'applying ipv6 firewall rules' 
+        #Dust.print_result node.exec('/etc/init.d/ip6tables restart')[:exit_code]
+
       else
         Dust.print_failed 'os not supported'
       end
