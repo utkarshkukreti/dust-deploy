@@ -82,7 +82,6 @@ module Dust
 
         # open ports
         rules['ports'].each do |rule|
-
           # if config is something like
           #   ports: 22
           # or 
@@ -93,6 +92,11 @@ module Dust
             rule = {}
             rule['port'] = port
           end
+
+          # skip rule for other ipversion than specified
+          rule['ip-version'] ||= 0 # default to 0, means both protocols
+          next if rule['ip-version'].to_i == 4 and ipv6
+          next if rule['ip-version'].to_i == 6 and ipv4
 
           # convert to string if port is a int
           rule['port'] = rule['port'].to_s if rule['port'].class == Fixnum
@@ -111,7 +115,7 @@ module Dust
             Dust.print_msg "allowing port #{port}:#{rule['protocol']}", 2
             rule_file += "-A INPUT -p #{rule['protocol']} --dport #{port} "
             rule_file += "-i #{rule['interface']} " if rule['interface']
-            rule_file += "--source #{rule['source']} " if rule['source'] and ipv4
+            rule_file += "--source #{rule['source']} " if rule['source']
             rule_file +="-m state --state NEW -j ACCEPT\n"
             Dust.print_ok
           end
