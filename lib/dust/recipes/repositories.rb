@@ -22,6 +22,10 @@ module Dust
           repo['release'] ||= node['lsbdistcodename']
           repo['components'] ||= 'main'
 
+          # ||= doesn't work for booleans
+          repo['source'] = repo['source'].nil? ? true : repo['source']
+          repo['binary'] = repo['binary'].nil? ? true : repo['binary']
+
           # the default repository in /etc/apt/sources.list (debian)
           if name == 'default'
             Dust.print_msg 'deploying default repository'
@@ -51,17 +55,21 @@ module Dust
 
             Dust.print_result node.write('/etc/apt/sources.list', sources, true)
             next
-          end
 
-          # add url to sources.list
-          Dust.print_msg "adding repository '#{name}' to sources"
-          Dust.print_result node.write("/etc/apt/sources.list.d/#{name}.list",
-                                       "deb #{repo['url']} #{repo['release']} #{repo['components']}", true)
+          else
+            # add url to sources.list
+            sources = ''
+            sources += "deb #{repo['url']} #{repo['release']} #{repo['components']}\n" if repo['binary']
+            sources += "deb-src #{repo['url']} #{repo['release']} #{repo['components']}\n" if repo['source']
 
-          # add the repository key
-          if repo['key']
-            Dust.print_msg "adding #{name} repository key"
-            Dust.print_result node.exec("wget -O- '#{repo['key']}' | apt-key add -")[:exit_code]
+            Dust.print_msg "adding repository '#{name}' to sources"
+            Dust.print_result node.write("/etc/apt/sources.list.d/#{name}.list", sources, true)
+
+            # add the repository key
+            if repo['key']
+              Dust.print_msg "adding #{name} repository key"
+              Dust.print_result node.exec("wget -O- '#{repo['key']}' | apt-key add -")[:exit_code]
+            end
           end
         end
 
