@@ -114,9 +114,16 @@ module Dust
           rule['port'].each do |port| 
             Dust.print_msg "allowing port #{port}:#{rule['protocol']}", 2
             rule_file += "-A INPUT -p #{rule['protocol']} --dport #{port} "
-            rule_file += "-i #{rule['interface']} " if rule['interface']
-            rule_file += "--source #{rule['source']} " if rule['source']
-            rule_file +="-m state --state NEW -j ACCEPT\n"
+            if rule['interface']
+              print " [dev: #{rule['interface']}]"
+              rule_file += "-i #{rule['interface']} " 
+            end
+            if rule['source']
+              print " [source: #{rule['source']}]"
+              rule_file += "--source #{rule['source']} "
+            end
+            rule_file += "-m state --state NEW "
+            rule_file += "-j ACCEPT\n"
             Dust.print_ok
           end
         end
