@@ -6,7 +6,7 @@ module Dust
     def locale node, locale
       if node.is_os? ['debian', 'ubuntu'], true
         Dust.print_msg "setting locale to '#{locale}'"
-        node.write '/etc/default/locale', "LANGUAGE=#{locale}\nLANG=#{locale}\nLC_ALL=#{locale}\n", true
+        node.write '/etc/default/locale', "LANGUAGE=#{locale}\nLANG=#{locale}\nLC_ALL=#{locale}\nLC_CTYPE=#{locale}\n", true
         Dust.print_ok
       elsif node.is_os? ['scientific', 'redhat', 'centos'], true
         Dust.print_msg "setting locale to '#{locale}'"
