@@ -37,14 +37,6 @@ module Dust
         return false
       end
 
-      # collect system facts using puppets facter
-      if uses_apt? true
-        install_package 'lsb-release' unless package_installed? 'lsb-release', true
-      end
-      install_package 'facter' unless package_installed? 'facter', true
-
-      @attr.merge! YAML.load( exec('facter -y')[:stdout] )
-
       true
     end
   
@@ -254,6 +246,8 @@ module Dust
   
     def is_os? os_list, quiet=false, indent=1
       Dust.print_msg("checking if this machine runs #{os_list.join(' or ')}", indent) unless quiet
+      collect_facts quiet, indent unless @attr['operatingsystem']
+
       os_list.each do |os|
         return Dust.print_result(true, quiet) if @attr['operatingsystem'].downcase == os.downcase
       end
@@ -336,6 +330,19 @@ module Dust
       cmd += " -d #{home}" if home
       cmd += " -s #{home}" if shell
       Dust.print_result( exec(cmd)[:exit_code], quiet ) 
+    end
+
+    def collect_facts quiet=false, indent=1
+      Dust.print_msg "collecting additional system facts\n" unless quiet
+      # collect system facts using puppets facter
+      install_package 'lsb-release', quiet, 2 if uses_apt? true
+      install_package 'facter', quiet, 2
+
+      Dust.print_msg 'running facter', 2 unless quiet
+      ret = exec 'facter -y'
+      @attr.merge! YAML.load ret[:stdout]
+      Dust.print_result ret[:exit_code], quiet
+      puts unless quiet
     end
 
     private
