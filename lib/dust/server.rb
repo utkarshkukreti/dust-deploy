@@ -38,7 +38,11 @@ module Dust
       end
 
       # collect system facts using puppets facter
-      install_package('facter') unless package_installed?('facter', true)
+      if uses_apt? true
+        install_package 'lsb-release' unless package_installed? 'lsb-release', true
+      end
+      install_package 'facter' unless package_installed? 'facter', true
+
       @attr.merge! YAML.load( exec('facter -y')[:stdout] )
 
       true
