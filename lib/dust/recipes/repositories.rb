@@ -39,8 +39,8 @@ module Dust
               sources += "deb http://security.debian.org/ #{repo['release']}/updates #{repo['components']}\n" +
                          "deb-src http://security.debian.org/ #{repo['release']}/updates #{repo['components']}\n\n"
             elsif node.is_ubuntu? true
-              sources += "deb #{repo['url']} #{repo['release']}-security #{repo['components']}\n" +
-                         "deb-src #{repo['url']} #{repo['release']}-security #{repo['components']}\n\n"
+              sources += "deb http://security.ubuntu.com/ubuntu/ #{repo['release']}-security #{repo['components']}\n" +
+                         "deb-src http://security.ubuntu.com/ubuntu/ #{repo['release']}-security #{repo['components']}\n\n"
             end
 
             # updates
@@ -51,6 +51,12 @@ module Dust
             if node.is_ubuntu? true
               sources += "deb #{repo['url']} #{repo['release']}-proposed #{repo['components']}\n" +
                         "deb-src #{repo['url']} #{repo['release']}-proposed #{repo['components']}\n\n"
+            end
+
+            # backports is enabled per default in ubuntu oneiric
+            if node.is_ubuntu? true
+              sources += "deb #{repo['url']} #{repo['release']}-backports #{repo['components']}\n" +
+                        "deb-src #{repo['url']} #{repo['release']}-backports #{repo['components']}\n\n"
             end
 
             Dust.print_result node.write('/etc/apt/sources.list', sources, true)
