@@ -31,9 +31,8 @@ module Dust
       rules['ipv4-custom-postrouting-rules'] ||= []
       rules['ipv6-custom-postrouting-rules'] ||= []
 
-
-# TODO
-# filter out array string fasching for ports
+      # convert ports: int to array if its just a single int so .each won't get hickups
+      rules['ports'] = [ rules['ports'] ] if rules['ports'].class == Fixnum
 
       [ 'iptables', 'ip6tables' ].each do |iptables|
         ipv4 = iptables == 'iptables'
