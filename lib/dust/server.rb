@@ -334,9 +334,10 @@ module Dust
 
     def collect_facts quiet=false, indent=1
       Dust.print_msg "collecting additional system facts\n" unless quiet
+
       # collect system facts using puppets facter
-      install_package 'lsb-release', quiet, 2 if uses_apt? true
-      install_package 'facter', quiet, 2
+      install_package 'lsb-release', false, 2 if uses_apt?(true) and not package_installed?('lsb-release', true)
+      install_package 'facter', false, 2 unless package_installed? 'facter', true
 
       Dust.print_msg 'running facter', 2 unless quiet
       ret = exec 'facter -y'
