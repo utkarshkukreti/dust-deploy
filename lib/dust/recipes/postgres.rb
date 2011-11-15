@@ -6,17 +6,19 @@ module Dust
     def postgres node, config
       template_path = "./templates/#{ File.basename(__FILE__).chomp( File.extname(__FILE__) ) }"
 
+      return Dust.print_failed 'no version specified' unless config['version']
+
       if node.uses_emerge? true
         return unless node.package_installed? 'postgresql-server'
+        config['data-dir'] ||= "/var/lib/postgresql/#{config['version']}/data"
+        config['conf-dir'] ||= "/etc/postgresql-#{config['version']}"
       elsif node.uses_apt? true
-        return Dust.print_failed 'no version specified' unless config['version']
         return unless node.package_installed? "postgresql-#{config['version']}"
+        config['data-dir'] ||= "/var/lib/postgresql/#{config['version']}/#{config['cluster']}"
+        config['conf-dir'] ||= "/etc/postgresql/#{config['version']}/#{config['cluster']}"
       else
         return 'os not supported'
       end
-
-      return Dust.print_failed 'no conf-dir specified' unless config['conf-dir']
-      return Dust.print_failed 'no data-dir specified' unless config['data-dir']
 
       deploy_file 'postgresql.conf', "#{config['conf-dir']}/postgresql.conf", binding
       deploy_file 'pg_hba.conf', "#{config['conf-dir']}/pg_hba.conf", binding
