@@ -6,8 +6,11 @@ module Dust
     def postgres node, config
       template_path = "./templates/#{ File.basename(__FILE__).chomp( File.extname(__FILE__) ) }"
 
-      if node.is_gentoo?
+      if node.uses_emerge? true
         return unless node.package_installed? 'postgresql-server'
+      elsif node.uses_apt? true
+        return Dust.print_failed 'no version specified' unless config['version']
+        return unless node.package_installed? "postgresql-#{config['version']}"
       else
         return 'os not supported'
       end
@@ -15,9 +18,9 @@ module Dust
       return Dust.print_failed 'no conf-dir specified' unless config['conf-dir']
       return Dust.print_failed 'no data-dir specified' unless config['data-dir']
 
-      deploy_file node, 'postgresql.conf', "#{config['conf-dir']}/postgresql.conf"
-      deploy_file node, 'pg_hba.conf', "#{config['conf-dir']}/pg_hba.conf"
-      deploy_file node, 'pg_ident.conf', "#{config['conf-dir']}/pg_ident.conf"
+      deploy_file 'postgresql.conf', "#{config['conf-dir']}/postgresql.conf", binding
+      deploy_file 'pg_hba.conf', "#{config['conf-dir']}/pg_hba.conf", binding
+      deploy_file 'pg_ident.conf', "#{config['conf-dir']}/pg_ident.conf", binding
 
       node.chmod '644', "#{config['conf-dir']}/postgresql.conf"
       node.chmod '644', "#{config['conf-dir']}/pg_hba.conf"
@@ -25,32 +28,36 @@ module Dust
 
       # deploy pacemaker script
       if node.package_installed? 'pacemaker'
-        deploy_file node, 'pacemaker.sh', "#{config['conf-dir']}/pacemaker.sh"
+        deploy_file 'pacemaker.sh', "#{config['conf-dir']}/pacemaker.sh", binding
         node.chmod '755', "#{config['conf-dir']}/pacemaker.sh"
       end
 
       # copy recovery.conf to either recovery.conf or recovery.done
       # depending on which file already exists.
       if node.file_exists? "#{config['data-dir']}/recovery.conf", true
-        deploy_file node, 'recovery.conf', "#{config['data-dir']}/recovery.conf"
+        deploy_file 'recovery.conf', "#{config['data-dir']}/recovery.conf", binding
       else
-        deploy_file node, 'recovery.conf', "#{config['data-dir']}/recovery.done"
+        deploy_file 'recovery.conf', "#{config['data-dir']}/recovery.done", binding
       end
 
       # deploy certificates to data-dir
-      deploy_file node, 'server.crt', "#{config['data-dir']}/server.crt"
-      deploy_file node, 'server.key', "#{config['data-dir']}/server.key"
+      deploy_file 'server.crt', "#{config['data-dir']}/server.crt", binding
+      deploy_file 'server.key', "#{config['data-dir']}/server.key", binding
 
       node.chown config['dbuser'], config['data-dir'] if config['dbuser']
       node.chmod 'u+Xrw,g-rwx,o-rwx', config['data-dir']
 
       # TODO:
       # reload/restart postgres (--restart for restarting)
-      # node.reload_service 'postgresql-9.0'
+      # node.reload_service "postgresql-#{config['version'}"
     end
 
-    def deploy_file node, file, target
+    def deploy_file file, target, recipe_binding
       template_path = "./templates/#{ File.basename(__FILE__).chomp( File.extname(__FILE__) ) }"
+
+      # get node and config from binding
+      node = eval 'node', recipe_binding
+      config = eval 'config', recipe_binding
 
       # if file is just a regular file, copy it to sites-available
       if File.exists? "#{template_path}/#{file}"
