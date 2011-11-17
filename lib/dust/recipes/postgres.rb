@@ -12,13 +12,16 @@ module Dust
         return unless node.package_installed? 'postgresql-server'
         config['data-dir'] ||= "/var/lib/postgresql/#{config['version']}/data"
         config['conf-dir'] ||= "/etc/postgresql-#{config['version']}"
+        config['archive-dir'] ||= "/var/lib/postgresql/#{config['version']}/archive"
       elsif node.uses_apt? true
         return unless node.package_installed? "postgresql-#{config['version']}"
         config['data-dir'] ||= "/var/lib/postgresql/#{config['version']}/#{config['cluster']}"
         config['conf-dir'] ||= "/etc/postgresql/#{config['version']}/#{config['cluster']}"
+        config['archive-dir'] ||= "/var/lib/postgresql/#{config['version']}/#{config['cluster']}-archive"
       else
         return 'os not supported'
       end
+
 
       deploy_file 'postgresql.conf', "#{config['conf-dir']}/postgresql.conf", binding
       deploy_file 'pg_hba.conf', "#{config['conf-dir']}/pg_hba.conf", binding
@@ -48,6 +51,11 @@ module Dust
 
       node.chown config['dbuser'], config['data-dir'] if config['dbuser']
       node.chmod 'u+Xrw,g-rwx,o-rwx', config['data-dir']
+
+      # create archive dir
+      node.mkdir config['archive-dir']
+      node.chown config['dbuser'], config['archive-dir'] if config['dbuser']
+      node.chmod 'u+Xrw,g-rwx,o-rwx', config['archive-dir']
 
       # TODO:
       # reload/restart postgres (--restart for restarting)
