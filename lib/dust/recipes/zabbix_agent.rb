@@ -13,10 +13,15 @@ module Dust
       Dust.print_msg 'adjusting and deploying zabbix_agentd.conf'
       node.write '/etc/zabbix/zabbix_agentd.conf', template.result(binding), true
       Dust.print_ok
-      
+
       # restart using new configuration
-      node.restart_service('zabbix-agent') if node.is_os? ['debian', 'ubuntu', 'centos'], true
-      node.restart_service('zabbix-agentd') if node.is_gentoo? true
+      if node.is_gentoo? true
+        node.autostart_service 'zabbix-agentd'
+        node.restart_service 'zabbix-agentd'
+      else 
+        node.autostart_service 'zabbix-agent'
+        node.restart_service 'zabbix-agent'
+      end
     end
 
     # installs zabbix and its dependencies
