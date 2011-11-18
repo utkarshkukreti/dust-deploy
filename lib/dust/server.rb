@@ -288,7 +288,18 @@ module Dust
       Dust.print_msg("checking if directory #{dir} exists", indent) unless quiet
       Dust.print_result( exec("test -d #{dir}")[:exit_code], quiet )
     end
-  
+ 
+    def autostart_service service, quiet=false, indent=1
+      Dust.print_msg("autostart #{service} on boot", indent) unless quiet
+      if uses_rpm? true
+        Dust.print_result( exec("chkconfig #{service} on")[:exit_code], quiet )
+      elsif uses_apt? true
+        Dust.print_result( exec("update-rc.d #{service} defaults")[:exit_code], quiet )
+      elsif uses_emerge? true
+        Dust.print_result( exec("rc-update add #{service} default")[:exit_code], quiet )
+      end
+    end
+ 
     def restart_service service, quiet=false, indent=1
       Dust.print_msg("restarting #{service}", indent) unless quiet 
       Dust.print_result( exec("/etc/init.d/#{service} restart")[:exit_code], quiet )
