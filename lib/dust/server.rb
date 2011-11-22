@@ -273,6 +273,10 @@ module Dust
     def is_scientific? quiet=false, indent=1
       is_os? [ 'scientific' ], quiet, indent
     end
+
+    def is_fedora? quiet=false, indent=1
+      is_os? [ 'fedora' ], quiet, indent
+    end
   
     def is_executable? file, quiet=false, indent=1
       Dust.print_msg("checking if file #{file} exists and is executeable", indent) unless quiet
