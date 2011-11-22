@@ -4,6 +4,8 @@ module Dust
     def memory_limit node, ingredients
       template_path = "./templates/#{ File.basename(__FILE__).chomp( File.extname(__FILE__) ) }"
 
+      node.collect_facts
+
       # get system memory (in kb)
       system_mem = convert_size node['memorysize']
 
