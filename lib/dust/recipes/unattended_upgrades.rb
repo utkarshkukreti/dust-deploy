@@ -5,7 +5,7 @@ module Dust
     def unattended_upgrades node, config
       template_path = "./templates/#{ File.basename(__FILE__).chomp( File.extname(__FILE__) ) }"
 
-      return unless node.is_os? [ 'debian', 'ubuntu' ]
+      return unless node.uses_apt? 
       node.install_package 'unattended-upgrades'
 
       config = {} unless config.class == Hash
