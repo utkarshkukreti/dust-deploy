@@ -15,7 +15,7 @@ module Dust
       Dust.print_ok
 
       # restart using new configuration
-      if node.is_gentoo? true
+      if node.uses_emerge? true
         node.autostart_service 'zabbix-agentd'
         node.restart_service 'zabbix-agentd'
       else 
@@ -55,7 +55,7 @@ module Dust
 
   def configure_postgres
 
-      next unless node.is_gentoo?
+      next unless node.uses_emerge?
       next unless node.package_installed?('postgresql-node')
 
       Dust.print_msg 'add zabbix system user to postgres group'
