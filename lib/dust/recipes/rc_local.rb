@@ -4,7 +4,7 @@ module Dust
 
     # configures rc_local
     def rc_local node, config
-      if node.is_os? [ 'debian', 'ubuntu' ], true
+      if node.uses_apt? true
         Dust.print_msg "configuring custom startup script\n"
 
         rc = ''
