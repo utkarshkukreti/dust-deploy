@@ -18,6 +18,8 @@ module Dust
       Dust.print_ok "listen on #{config['bind_address']}:#{config['port']}", 2
 
       config['innodb_file_per_table'] ||= 1
+      config['innodb_thread_concurrency'] ||= 0
+      config['innodb_flush_log_at_trx_commit'] ||= 1
 
       # allocate 70% of the available ram to mysql
       # but leave max 1gb to system
