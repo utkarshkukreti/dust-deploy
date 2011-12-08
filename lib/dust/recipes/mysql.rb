@@ -28,7 +28,7 @@ module Dust
         node.collect_facts true
 
         # get system memory (in kb)
-        system_mem = convert_size node['memorysize']
+        system_mem = Dust.convert_size node['memorysize']
 
         # allocate 70% of the available ram to mysql
         buffer_pool = (system_mem * 0.70).to_i / 1024
@@ -46,24 +46,6 @@ module Dust
       # TODO:
       #node.service_restart 'mysql-server'
       #node.service_reload 'mysql-server'
-    end
-
-    # converts string to kilobytes (rounded)
-    def convert_size s
-      i, unit = s.split(' ')
-
-      case unit.downcase
-      when 'kb'
-        return i.to_i
-      when 'mb'
-        return (i.to_f * 1024).to_i
-      when 'gb'
-        return (i.to_f * 1024 * 1024).to_i
-      when 'tb'
-        return (i.to_f * 1024 * 1024 * 1024).to_i
-      else
-        return false
-      end
     end
 
   end
