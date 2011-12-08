@@ -57,6 +57,34 @@ module Dust
       node.chown config['dbuser'], config['archive-dir'] if config['dbuser']
       node.chmod 'u+Xrw,g-rwx,o-rwx', config['archive-dir']
 
+
+      # increase shm memory
+      if node.uses_apt? true
+        Dust.print_msg "setting postgres sysctl keys\n"
+        node.collect_facts true
+
+        # use half of system memory for shmmax
+        shmmax = Dust.convert_size(node['memorysize']) * 1024 / 2
+        shmall = shmmax / 4096 # shmmax/pagesize (pagesize = 4096)
+
+        Dust.print_msg "setting shmmax to: #{shmmax}", 2
+        Dust.print_result node.exec("sysctl -w kernel.shmmax=#{shmmax}")[:exit_code]
+        Dust.print_msg "setting shmall to: #{shmall}", 2
+        Dust.print_result node.exec("sysctl -w kernel.shmall=#{shmall}")[:exit_code]
+        Dust.print_msg 'setting overcommit memory to 2', 2
+        Dust.print_result node.exec('sysctl -w vm.overcommit_memory=2')[:exit_code]
+        Dust.print_msg 'setting swappiness to 0', 2
+        Dust.print_result node.exec('sysctl -w vm.swappiness=0')[:exit_code]
+
+        file = ''
+        file += "kernel.shmmax=#{shmmax}\n"
+        file += "kernel.shmall=#{shmall}\n"
+        file += "vm.overcommit_memory=2\n" # don't allocate memory that's not there
+        file += "vm.swappiness=0\n" # rather shrink cache then use swap as filesystem cache
+
+        node.write "/etc/sysctl.d/30-postgresql-shm.conf", file
+      end
+
       # TODO:
       # reload/restart postgres (--restart for restarting)
       # node.reload_service "postgresql-#{config['version'}"
