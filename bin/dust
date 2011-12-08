@@ -1,8 +1,9 @@
 #!/usr/bin/env ruby
 
 require 'rubygems'
+require 'thor/runner'
+require 'thor/util'
 require 'yaml'
-require 'thor'
 require 'dust'
 
 # stole this from rails
@@ -24,199 +25,143 @@ class Hash
   end
 end
 
-module Dust
-class Deploy < Thor
+module  Dust
+  class Deploy < Thor::Runner
 
-  desc 'deploy [server.yaml] [--filter key=value,value2] [--recipes recipe1 recipe2] [--proxy host:port]',
-       'deploy all recipes to the node(s) specified in server.yaml or to all nodes defined in ./nodes/'
-  method_options :filter => :hash, :recipes => :array, :proxy => :string,
-                 :restart => :boolean, :reload => :boolean
-  def deploy yaml=''
-    Dust.print_failed 'no servers match this filter' if load_servers(yaml).empty?
+    default_task :deploy
+    method_options :filter => :hash, :recipes => :array, :proxy => :string,
+                   :restart => :boolean, :reload => :boolean
 
-    @nodes.each do |node|
-      # skip this node if there are no recipes found
-      next unless node['recipes']
+    desc 'deploy [server.yaml] [--filter key=value,value2] [--recipes recipe1 recipe2] [--proxy host:port]',
+         'deploy all recipes to the node(s) specified in server.yaml or to all nodes defined in ./nodes/'
+    def deploy yaml=''
+      initialize_thorfiles
+      Dust.print_failed 'no servers match this filter' if load_servers(yaml).empty?
 
-      # connect to server
-      server = Server.new node 
-      next unless server.connect
+      @nodes.each do |node|
+         # skip this node if there are no recipes found
+        next unless node['recipes']
 
-      # runs the method with the recipe name, defined and included in recipe/*.rb
-      # call recipes for each recipe that is defined for this node
-      node['recipes'].each do |recipe, ingredients|
-        # in case --recipes was set, skip unwanted recipes
-        next unless options[:recipes].include?(recipe) if options[:recipes]
+        # connect to server
+        server = Server.new node
+        next unless server.connect
 
-        # skip disabled recipes
-        next if ingredients == 'disabled'
-        
-        # this is still in progress, I also want to pass arguments to this subroutine,
-        # display help messages, and things like that. 
-        # thor can probably somehow take care of that, but I didn't find out yet.
-        Dust.print_recipe recipe
-        self.send recipe.to_sym, server, ingredients
-        puts
-      end
+        # runs the method with the recipe name, defined and included in recipe/*.rb
+        # call recipes for each recipe that is defined for this node
+        node['recipes'].each do |recipe, ingredients|
 
-      server.disconnect
-    end
-  end
+          # in case --recipes was set, skip unwanted recipes
+          next unless options[:recipes].include?(recipe) if options[:recipes]
 
+          # skip disabled recipes
+          next if ingredients == 'disabled'
 
-  desc 'status [server.yaml] [--recipes recipe1 recipe2] [--filter key=value,value2] [--proxy host:port]',
-       'run a recipe on a server'
-  method_options :filter => :hash, :recipes => :array,
-                 :long => :boolean, :proxy => :string
-  def status yaml=''
-    Dust.print_failed 'no servers match this filter' if load_servers(yaml).empty?
+          next unless Thor::Util.find_by_namespace recipe
+          send recipe, 'deploy', server, ingredients, options
 
-    @nodes.each do |node|
-      # skip this node if there are no recipes found
-      next unless node['recipes']
-
-      # connect to server
-      server = Server.new node
-      next unless server.connect
-
-      # runs the method with the recipe name, defined and included in recipe/*.rb
-      # call recipes for each recipe that is defined for this node
-      node['recipes'].each do |recipe, ingredients|
-        # in case --recipes was set, skip unwanted recipes
-        next unless options[:recipes].include?(recipe) if options[:recipes]
-
-        # skip disabled recipes
-        next if ingredients == 'disabled'
-
-        # this is still in progress, I also want to pass arguments to this subroutine,
-        # display help messages, and things like that. 
-        # thor can probably somehow take care of that, but I didn't find out yet.
-        Dust.print_recipe recipe
-        self.send "#{recipe}_status".to_sym, server, ingredients
-        puts
-      end
-
-      server.disconnect
-    end
-  end
-
-
-  desc 'exec command [--filter key=value,value2] [--proxy host:port]',
-       'execute command on servers given with --filter option'
-  method_options :filter => :hash, :proxy => :string
-  def exec command
-    Dust.print_failed 'no servers match this filter' if load_servers.empty?
-
-    @nodes.each do |node|
-      # connect to server
-      server = Server.new node
-      next unless server.connect
-
-      Dust.print_recipe 'exec'
-      Dust.print_msg "executing command: '#{command}'"
-      ret = server.exec command
-      Dust.print_result ret[:exit_code]
-
-      Dust.print_msg "#{Dust.black}#{ret[:stdout].chomp}#{Dust.none}\n", 0 if ret[:stdout].length > 0
-      Dust.print_msg "#{Dust.red(0)}#{ret[:stderr].chomp}#{Dust.none}\n", 0 if ret[:stderr].length > 0
-      puts
-    end
-  end
-
-
-  private
-
-  # loads servers
-  def load_servers yaml=''
-    @nodes = []
-
-    # if the argument is empty, load all yaml files in the ./nodes/ directory
-    # if the argument is a directory, load yaml files in this directory
-    # if the argument is a file, load the file.
-    if yaml.empty?
-      yaml_files = Dir['./nodes/**/*.yaml']
-    else
-      yaml_files = Dir["#{yaml}/**/*.yaml"] if File.directory? yaml
-      yaml_files = yaml if File.exists? yaml
-    end
-
-    unless yaml_files
-      Dust.print_failed "#{yaml} doesn't exist. exiting."
-      exit
-    end
-
-    yaml_files.each do |file|
-      node = YAML.load_file(file)
-
-      # if the file is empty, just skip it
-      next unless node
-
-      # if there is not hostname field in the yaml file,
-      # treat this node file as a template, and skip to the next one
-      next unless node['hostname']
-  
-      # look for the inherits field in the yaml file,
-      # and merge the templates recursively into this node
-      if node['inherits']
-        inherited = {}
-        node.delete('inherits').each do |file|
-          template = YAML.load_file "./nodes/#{file}.yaml"
-          inherited.deep_merge! template
+          puts
         end
-        node = inherited.deep_merge node
+
+        server.disconnect
+      end
+    end
+
+    desc 'status', 'status of the tasks'
+    def status
+      initialize_thorfiles
+    end
+
+    private
+    # overwrite thorfiles to look for tasks in the recipes directories
+    def thorfiles(relevant_to=nil, skip_lookup=false)
+      Dir[File.dirname(__FILE__) + '/../lib/dust/recipes/*.rb'] | Dir['recipes/*.rb']
+    end
+
+    # loads servers
+    def load_servers yaml=''
+      @nodes = []
+
+      # if the argument is empty, load all yaml files in the ./nodes/ directory
+      # if the argument is a directory, load yaml files in this directory
+      # if the argument is a file, load the file.
+      if yaml.empty?
+        yaml_files = Dir['./nodes/**/*.yaml']
+      else
+        yaml_files = Dir["#{yaml}/**/*.yaml"] if File.directory? yaml
+        yaml_files = yaml if File.exists? yaml
       end
 
-      # if more than one hostname is specified, create a node
-      # with the same settings for each hostname
-      node['hostname'].each do |hostname|
-        n = node.clone
-
-        # overwrite hostname with single hostname (in case there are multiple)
-        n['hostname'] = hostname
-
-        # create a new field with the fully qualified domain name
-        n['fqdn'] = hostname
-        n['fqdn'] += '.' + n['domain'] if n['domain']
-
-        # pass command line proxy option
-        n['proxy'] = options[:proxy] if options[:proxy]
-
-        # add this node to the global node array
-        @nodes.push n unless filtered? n
+      unless yaml_files
+        Dust.print_failed "#{yaml} doesn't exist. exiting."
+        exit
       end
+
+      yaml_files.each do |file|
+        node = YAML.load_file(file)
+
+        # if the file is empty, just skip it
+        next unless node
+
+        # if there is not hostname field in the yaml file,
+        # treat this node file as a template, and skip to the next one
+        next unless node['hostname']
+  
+        # look for the inherits field in the yaml file,
+        # and merge the templates recursively into this node
+        if node['inherits']
+          inherited = {}
+          node.delete('inherits').each do |file|
+            template = YAML.load_file "./nodes/#{file}.yaml"
+            inherited.deep_merge! template
+          end
+          node = inherited.deep_merge node
+        end
+
+        # if more than one hostname is specified, create a node
+        # with the same settings for each hostname
+        node['hostname'].each do |hostname|
+          n = node.clone
+
+          # overwrite hostname with single hostname (in case there are multiple)
+          n['hostname'] = hostname
+
+          # create a new field with the fully qualified domain name
+          n['fqdn'] = hostname
+          n['fqdn'] += '.' + n['domain'] if n['domain']
+
+          # pass command line proxy option
+          n['proxy'] = options[:proxy] if options[:proxy]
+
+          # add this node to the global node array
+          @nodes.push n unless filtered? n
+        end
+      end
+    end
+
+    # checks if this node was filtered out by command line argument
+    # e.g. --filter environment:staging filters out all machines but
+    # those in the environment staging
+    def filtered? node
+
+      # if filter is not specified, instantly return false
+      return false unless options[:filter]
+
+      # remove items if other filter arguments don't match
+      options[:filter].each do |k, v|
+        next unless v # skip empty filters
+
+        # filter if this node doesn't even have the attribute
+        return true unless node[k]
+
+        # allow multiple filters of the same type, divided by ','
+        # e.g. --filter environment:staging,production
+        return true unless v.split(',').include? node[k]
+      end
+
+      # no filter matched, so this host is not filtered.
+      false
     end
   end
 
-  # checks if this node was filtered out by command line argument
-  # e.g. --filter environment:staging filters out all machines but
-  # those in the environment staging
-  def filtered? node
-
-    # if filter is not specified, instantly return false
-    return false unless options[:filter]
-
-    # remove items if other filter arguments don't match
-    options[:filter].each do |k, v|
-      next unless v # skip empty filters
-
-      # filter if this node doesn't even have the attribute
-      return true unless node[k]
-
-      # allow multiple filters of the same type, divided by ','
-      # e.g. --filter environment:staging,production
-      return true unless v.split(',').include? node[k]
-
-      #return true if node[k] != v
-    end
-
-    # no filter matched, so this host is not filtered.
-    false
-  end
-end
-
-# require all recipes (system wide and in local ./recipes directory)
-Dir[File.dirname(__FILE__) + '/../lib/dust/recipes/*.rb'].each { |file| require file }
-Dir['./recipes/*.rb'].each { |file| require file }
-
-Deploy.start
+  Deploy.start
 end
