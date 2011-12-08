@@ -29,7 +29,8 @@ class Deploy < Thor
 
   desc 'deploy [server.yaml] [--filter key=value,value2] [--recipes recipe1 recipe2] [--proxy host:port]',
        'deploy all recipes to the node(s) specified in server.yaml or to all nodes defined in ./nodes/'
-  method_options :filter => :hash, :recipes => :array, :proxy => :string
+  method_options :filter => :hash, :recipes => :array, :proxy => :string,
+                 :restart => :boolean, :reload => :boolean
   def deploy yaml=''
     Dust.print_failed 'no servers match this filter' if load_servers(yaml).empty?
 
