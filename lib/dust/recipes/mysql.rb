@@ -43,9 +43,8 @@ module Dust
       node.write '/etc/mysql/my.cnf', template.result(binding)
       node.chmod '644', '/etc/mysql/my.cnf'
 
-      # TODO:
-      #node.service_restart 'mysql-server'
-      #node.service_reload 'mysql-server'
+      node.service_restart 'mysql-server' if options.restart?
+      node.service_reload 'mysql-server' if options.reload?
     end
 
   end

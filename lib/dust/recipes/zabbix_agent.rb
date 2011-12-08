@@ -17,10 +17,10 @@ module Dust
       # restart using new configuration
       if node.uses_emerge? true
         node.autostart_service 'zabbix-agentd'
-        node.restart_service 'zabbix-agentd'
+        node.restart_service 'zabbix-agentd' if options.restart?
       else 
         node.autostart_service 'zabbix-agent'
-        node.restart_service 'zabbix-agent'
+        node.restart_service 'zabbix-agent' if options.restart?
       end
     end
 

@@ -13,11 +13,13 @@ module Dust
         config['data-dir'] ||= "/var/lib/postgresql/#{config['version']}/data"
         config['conf-dir'] ||= "/etc/postgresql-#{config['version']}"
         config['archive-dir'] ||= "/var/lib/postgresql/#{config['version']}/archive"
+        config['service-name'] ||= "postgresql-#{config['version']}"
       elsif node.uses_apt? true
         return unless node.package_installed? "postgresql-#{config['version']}"
         config['data-dir'] ||= "/var/lib/postgresql/#{config['version']}/#{config['cluster']}"
         config['conf-dir'] ||= "/etc/postgresql/#{config['version']}/#{config['cluster']}"
         config['archive-dir'] ||= "/var/lib/postgresql/#{config['version']}/#{config['cluster']}-archive"
+        config['service-name'] ||= 'postgresql'
       else
         return 'os not supported'
       end
@@ -85,9 +87,10 @@ module Dust
         node.write "/etc/sysctl.d/30-postgresql-shm.conf", file
       end
 
-      # TODO:
-      # reload/restart postgres (--restart for restarting)
-      # node.reload_service "postgresql-#{config['version'}"
+      # reload/restart postgres if command line option is given
+      
+      node.restart_service config['service-name'] if options.restart?
+      node.reload_service config['service-name'] if options.reload?
     end
 
     def deploy_file file, target, recipe_binding

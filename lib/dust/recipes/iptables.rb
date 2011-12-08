@@ -242,15 +242,17 @@ module Dust
         node.chmod '700', target if node.uses_apt? true or node.uses_emerge? true
         node.chmod '600', target if node.uses_rpm? true
 
-        Dust.print_msg 'applying ipv4 rules' if ipv4
-        Dust.print_msg 'applying ipv6 rules' if ipv6
+        if options.restart?
+          Dust.print_msg 'applying ipv4 rules' if ipv4
+          Dust.print_msg 'applying ipv6 rules' if ipv6
 
-        if node.uses_rpm? true
-          Dust.print_result node.exec("/etc/init.d/#{iptables} restart")[:exit_code]
+          if node.uses_rpm? true
+            Dust.print_result node.exec("/etc/init.d/#{iptables} restart")[:exit_code]
 
-        elsif node.uses_apt? true or node.uses_emerge? true
-          ret = node.exec target
-          Dust.print_result( (ret[:exit_code] == 0 and ret[:stdout].empty? and ret[:stderr].empty?) )
+          elsif node.uses_apt? true or node.uses_emerge? true
+            ret = node.exec target
+            Dust.print_result( (ret[:exit_code] == 0 and ret[:stdout].empty? and ret[:stderr].empty?) )
+          end
         end
 
         # on gentoo, rules have to be saved using the init script,

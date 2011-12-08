@@ -8,7 +8,7 @@ module Dust
       node.scp("#{template_path}/hosts", '/etc/hosts')
 
       # restart dns service
-      node.restart_service(daemon)
+      node.restart_service daemon if options.restart?
     end
   end
 end

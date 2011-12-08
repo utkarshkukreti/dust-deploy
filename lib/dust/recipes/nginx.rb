@@ -45,7 +45,7 @@ module Dust
       Dust.print_msg 'checking nginx configuration'
       if node.exec('/etc/init.d/nginx configtest')[:exit_code] == 0
         Dust.print_ok
-        node.restart_service('nginx')
+        node.restart_service('nginx') if options.restart?
       else
         Dust.print_failed
       end
