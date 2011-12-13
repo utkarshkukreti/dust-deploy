@@ -63,15 +63,12 @@ module  Dust
     # run specified recipes in the given context
     def run_recipes context
       @nodes.each do |node|
+        recipes =  {}
+
          # skip this node if there are no recipes found
         next unless node['recipes']
 
-        # connect to server
-        server = Server.new node
-        next unless server.connect
-
-        # runs the method with the recipe name, defined and included in recipe/*.rb
-        # call recipes for each recipe that is defined for this node
+        # generate list of recipes for this node
         node['recipes'].each do |recipe, ingredients|
 
           # in case --recipes was set, skip unwanted recipes
@@ -81,8 +78,22 @@ module  Dust
           next if ingredients == 'disabled'
 
           next unless Thor::Util.find_by_namespace recipe
-          send recipe, context, server, ingredients, options
 
+          recipes[recipe] = ingredients
+        end
+
+        # skip this node unless we're actually having recipes to cook
+        next if recipes.empty?
+
+
+        # connect to server
+        server = Server.new node
+        next unless server.connect
+
+        # runs the method with the recipe name, defined and included in recipe/*.rb
+        # call recipes for each recipe that is defined for this node
+        recipes.each do |recipe, ingredients|
+          send recipe, context, server, ingredients, options
           puts
         end
 
