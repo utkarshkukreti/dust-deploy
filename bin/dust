@@ -25,6 +25,22 @@ class Hash
   end
 end
 
+# stole this from Afz902k who posted something similar at stackoverflow.com
+# adds ability to check if a class with the name of a string exists
+class String
+    def to_class
+        Kernel.const_get self.capitalize
+    rescue NameError 
+        nil
+    end
+
+    def is_a_defined_class?
+        true if self.to_class
+    rescue NameError
+        false
+    end
+end
+
 
 module  Dust
   class Deploy < Thor::Runner
@@ -77,7 +93,10 @@ module  Dust
           # skip disabled recipes
           next if ingredients == 'disabled'
 
-          next unless Thor::Util.find_by_namespace recipe
+          # check if method and thor task actually exist
+          k = Thor::Util.find_by_namespace recipe
+          next unless k
+          next unless k.method_defined? context
 
           recipes[recipe] = ingredients
         end
