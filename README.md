@@ -220,7 +220,7 @@ this is the basic skeletton of a recipe file, placed in recipes/your_task.rb
 
     class YourTask < Thor
       desc 'your_task:deploy', 'example task: displays a message and does basically nothing'
-      def deploy node, key, options
+      def deploy node, ingredients, options
 
         ::Dust.print_msg 'this is a test example. welcome! output of uname -a below:'
         puts node.exec('uname -a')[:stdout]
@@ -228,6 +228,11 @@ this is the basic skeletton of a recipe file, placed in recipes/your_task.rb
         node.uses_apt?
 
         node.restart_service 'your-service' if options.restart?
+      end
+
+      desc 'your_task:status', 'example status: displays the status of this recipe (optional)'
+      def status, node, ingredients, options
+        ::Dust.print_msg "displaying status of this example recipe!"
       end
     end
 
