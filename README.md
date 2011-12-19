@@ -161,6 +161,7 @@ dust comes with a set of predifined, (almost) ready to use recipes managing a lo
 -   nginx configuration
 -   zabbix agent
 -   debian/ubuntu unattended upgrades
+-   newrelic system monitoring daemon
 
 
 writing your own recipes
