@@ -18,17 +18,18 @@ installation is quite simple. just
 using
 ------------
 
-first, let's start by creating your dust directory
+let's start by creating a new directory skeleton
 
-    $ mkdir mynetwork.dust
+    $ dust new mynetwork
+      - spawning new dust directory skeleton into 'mynetwork.dust' [ ok ]
+      - copying example yaml node configuration files   - copying _debian.yaml [ ok ]
+        - copying _default.yaml [ ok ]
+        - copying myhost.yaml [ ok ]
 
-then, create directories you might/will need. (there's going to be an automation process in the future, e.g. using "dust new mynetwork.dust")
+this will create a directory called mynetwork.dust, the nodes, templates and recipes subdirectories and will create some example configuration files in the nodes directory. hop into your new dust directory and see what's going on:
 
     $ cd mynetwork.dust
-    $ mkdir templates
-    $ mkdir nodes
 
-in the nodes directory, there will be your node-templates and node configuration files.
 dust uses simple .yaml files for configuring your nodes.
 let's start by adding a simple host:
 
