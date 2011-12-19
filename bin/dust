@@ -4,6 +4,7 @@ require 'rubygems'
 require 'thor/runner'
 require 'thor/util'
 require 'yaml'
+require 'fileutils'
 require 'dust'
 
 # stole this from rails
@@ -73,6 +74,24 @@ module  Dust
       run_recipes 'status'
     end
 
+
+    # creates directory skeleton for a dust setup
+    desc 'newnetwork <name>', 'creates a dust directory skeleton for your network'
+    def newnetwork name
+      Dust.print_msg "spawning new dust directory skeleton into '#{name}.dust'"
+      Dir.mkdir "#{name}.dust"
+      Dir.mkdir "#{name}.dust/nodes"
+      Dir.mkdir "#{name}.dust/recipes"
+      Dir.mkdir "#{name}.dust/templates"
+      Dust.print_ok
+
+      Dust.print_msg "copying example yaml node configuration files\n"
+      Dir[File.dirname(__FILE__) + '/../lib/dust/examples/nodes/*.yaml'].each do |file|
+        Dust.print_msg "copying #{File.basename file}", 2
+        FileUtils.cp file, "#{name}.dust/nodes/#{File.basename file}"
+        Dust.print_ok
+      end
+    end
 
     private
 

@@ -1,0 +1,5 @@
+hostname: kyle
+inherits: [ _default, _debian ]
+
+recipes:
+  packages: [ 'vim', 'git-core', 'rsync' ]

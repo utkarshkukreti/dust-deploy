@@ -1,0 +1,9 @@
+group: debian
+
+recipes:
+  locale: en_US.UTF-8
+  debsecan: default
+  repositories:
+    default:
+      url: "http://ftp.de.debian.org/debian/"
+      components: "main contrib non-free"
