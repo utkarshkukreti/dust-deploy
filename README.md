@@ -141,6 +141,22 @@ you can also overwrite settings in the template with the ones in yourhost.yaml
 
 
 
+filters and proxy
+------------
+
+because that's not awesome enough, you can also filter your hosts using the --filter flag
+     $ dust deploy --filter hostname:myhost-1,otherhost
+
+     $ dust deploy --filter group:debian
+
+
+and even more, it supports socks proxys, so you can maintain your whole infrastructure without setting up a vpn from the outside via ssh
+
+     $ ssh user@gateway.yourcompany.net -D 1080
+
+     $ dust deploy --proxy localhost:1080
+
+
 
 using recipes (and their templates)
 ------------
