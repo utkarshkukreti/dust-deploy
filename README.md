@@ -22,7 +22,8 @@ let's start by creating a new directory skeleton
 
     $ dust new mynetwork
       - spawning new dust directory skeleton into 'mynetwork.dust' [ ok ]
-      - copying example yaml node configuration files   - copying _debian.yaml [ ok ]
+      - copying example yaml node configuration files
+        - copying _debian.yaml [ ok ]
         - copying _default.yaml [ ok ]
         - copying myhost.yaml [ ok ]
 
