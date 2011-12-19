@@ -1,0 +1,4 @@
+# a template to be inherited by everything, so we set the basics here
+domain: example.com
+port: 22
+user: root

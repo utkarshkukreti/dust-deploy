@@ -1,0 +1,9 @@
+# this is the hostname of this node
+hostname: myhost
+
+# we inherit both templates we created
+inherits: [ _default, _debian ]
+
+recipes:
+  # this host will make sure the follwing packages are installed
+  packages: [ 'vim', 'git-core', 'rsync' ]

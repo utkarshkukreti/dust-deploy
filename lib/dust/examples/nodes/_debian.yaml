@@ -1,0 +1,15 @@
+# adding a group enables you to filter hosts after groups later
+group: debian
+
+recipes:
+  # set the debian locale
+  locale: en_US.UTF-8
+
+  # configure debsecan
+  debsecan: default
+
+  # configure apt repositories
+  repositories:
+    default:
+      url: "http://ftp.de.debian.org/debian/"
+      components: "main contrib non-free"
