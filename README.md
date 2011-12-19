@@ -11,7 +11,8 @@ installing
 ------------
 
 installation is quite simple. just 
-    gem install dust
+
+    # gem install dust-deploy
 
 
 using
@@ -27,7 +28,7 @@ then, create directories you might/will need. (there's going to be an automation
     $ mkdir templates
     $ mkdir nodes
 
-in the nodes directory, there will be your templates and node configurations.
+in the nodes directory, there will be your node-templates and node configuration files.
 dust uses simple .yaml files for configuring your nodes.
 let's start by adding a simple host:
 
@@ -45,7 +46,7 @@ and put in basic information:
     port: 22
     user: root
 
-    # because this alone won't tell dust what to do, let's for example install a package
+    # because this alone won't tell dust what to do, let's for example install some useful packages
     recipes:
       packages: [ 'vim', 'git-core', 'rsync' ]
 
@@ -64,7 +65,7 @@ you can then save the file, and tell dust to get to work:
 
 you should see dust connecting to the node, checking if the requestet packages are installed, and if not, install them.
 dust works with aptitude, yum and emerge systems at the moment (testet with ubuntu, debian, gentoo, scientificlinux, centos).
-feel free to contribute to dust, so that your system is also supportet. contribution is easy!
+feel free to contribute to dust, so that your system is also supported. contribution is easy! just send me a github pull request. You can find the repository here: https://github.com/kechagia/dust-deploy
 
 
 inheritance
@@ -113,6 +114,8 @@ you can then inherit these templates in your yourhost.yaml:
 running dust now, will use the inherited settings as well.
 you can also overwrite settings in the template with the ones in yourhost.yaml
 
+**NOTE** hashes will be deep merged with inherited hashes, other types will be overwritten!
+
     $ dust deploy
 
     [ yourhost ]
@@ -141,9 +144,91 @@ you can also overwrite settings in the template with the ones in yourhost.yaml
 using recipes (and their templates)
 ------------
 
+dust comes with a set of predifined, (almost) ready to use recipes managing a lot of stuff for you, including the following:
+
+-   ssh authorized keys
+-   email aliases file
+-   /etc/hosts
+-   /etc/motd
+-   /etc/resolv.conf
+-   install basic system tools and pushing .configuration files for root
+-   iptables firewall
+-   debian/ubuntu debsecan security notifications
+-   debian/ubunto repositories
+-   duplicity backups
+-   mysql server configuration
+-   postgresql server configuration (including corosync scripts)
+-   nginx configuration
+-   zabbix agent
+-   debian/ubuntu unattended upgrades
+
 
 writing your own recipes
 ------------
+
+because the above recipes will probably not in all cases fullfill your needs, it's pretty easy to write your own recipes. You can either file them in using a git pull request (if you think it's a generic one which others might use as well), or place them locally in the "recipes" folder in your mynetwork.dust directory.
+
+dust comes with a set of predifined functions to perform system taks, which you can (and should!) use.
+
+### the server.rb methods you can (and should!) use
+
+almost all functions understand the quiet=true and indend=integer arguments
+
+#### exec command
+#### write target, text, quiet=false, indent=1
+#### append target, text, quiet=false, indent=1
+#### scp source, destination, quiet=false, indent=1
+#### symlink source, destination, quiet=false, indent=1
+#### chmod mode, file, quiet=false, indent=1
+#### chown user, file, quiet=false, indent=1
+#### rm file, quiet=false, indent=1
+#### mkdir dir, quiet=false, indent=1
+#### restorecon path, quiet=false, indent=1
+#### get_system_users quiet=false
+#### package_installed? packages, quiet=false, indent=1
+#### install_package package, quiet=false, indent=1, env=""
+#### update_repos quiet=false, indent=1
+#### system_update quiet=false, indent=1
+#### uses_apt? quiet=false, indent=1
+#### uses_rpm? quiet=false, indent=1
+#### uses_emerge? quiet=false, indent=1
+#### is_executable? file, quiet=false, indent=1
+#### file_exists? file, quiet=false, indent=1
+#### dir_exists? dir, quiet=false, indent=1
+#### autostart_service service, quiet=false, indent=1
+#### restart_service service, quiet=false, indent=1
+#### reload_service service, quiet=false, indent=1
+#### user_exists? user, quiet=false, indent=1
+#### create_user user, home=nil, shell=nil, quiet=false, indent=1
+
+#### collect_facts quiet=false, indent=1
+#### is_os? os_list, quiet=false, indent=1
+#### is_debian? quiet=false, indent=1
+#### is_ubuntu? quiet=false, indent=1
+#### is_gentoo? quiet=false, indent=1
+#### is_centos? quiet=false, indent=1
+#### is_scientific? quiet=false, indent=1
+#### is_fedora? quiet=false, indent=1
+
+
+### example recipes
+
+The best is to have a look at dusts build-in recipes: https://github.com/kechagia/dust-deploy/tree/master/lib/dust/recipes
+
+this is the basic skeletton of a recipe file, placed in recipes/your_task.rb
+
+    class YourTask < Thor
+      desc 'your_task:deploy', 'example task: displays a message and does basically nothing'
+      def deploy node, key, options
+
+        ::Dust.print_msg 'this is a test example. welcome! output of uname -a below:'
+        puts node.exec('uname -a')[:stdout]
+
+        node.uses_apt?
+
+        node.restart_service 'your-service' if options.restart?
+      end
+    end
 
 
 contributing
@@ -151,4 +236,3 @@ contributing
 
 you have a cool contribution or bugfix? yippie! just file in a pull-request!
 
-### the server.rb methods you can (and should!) use
