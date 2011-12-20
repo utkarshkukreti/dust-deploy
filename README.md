@@ -112,7 +112,7 @@ you can then inherit these templates in your yourhost.yaml:
 running dust now, will use the inherited settings as well.
 you can also overwrite settings in the template with the ones in yourhost.yaml
 
-**NOTE** hashes will be deep merged with inherited hashes, other types will be overwritten!
+**NOTE:** hashes will be deep merged with inherited hashes, other types will be overwritten!
 
     $ dust deploy
 
@@ -142,6 +142,7 @@ filters and proxy
 ------------
 
 because that's not awesome enough, you can also filter your hosts using the --filter flag
+
      $ dust deploy --filter hostname:myhost-1,otherhost
 
      $ dust deploy --filter group:debian
