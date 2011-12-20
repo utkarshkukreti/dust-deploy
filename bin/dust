@@ -55,6 +55,7 @@ module  Dust
                    :restart => :boolean, :reload => :boolean
 
     def deploy yaml=''
+      return unless check_dust_dir
       initialize_thorfiles
       Dust.print_failed 'no servers match this filter' if load_servers(yaml).empty?
 
@@ -68,6 +69,7 @@ module  Dust
     method_options :filter => :hash, :recipes => :array, :proxy => :string
 
     def status yaml=''
+      return unless check_dust_dir
       initialize_thorfiles
       Dust.print_failed 'no servers match this filter' if load_servers(yaml).empty?
 
@@ -83,7 +85,23 @@ module  Dust
       Dust.print_ok
     end
 
+
     private
+
+    def check_dust_dir
+      if Dir.pwd.split('.').last != 'dust'
+        Dust.print_failed 'current directory does not end with .dust, are you in your dust directory?'
+        Dust.print_msg "try running 'dust new mynetwork' to let me create one for you with tons of examples!\n", 0
+        return false
+      end
+
+      unless File.directory? './nodes'
+        Dust.print_failed 'could not find \'nodes\' folder in your dust directory. cannot continue.'
+        return false
+      end
+
+      true
+    end
 
     # run specified recipes in the given context
     def run_recipes context
