@@ -22,12 +22,8 @@ let's start by creating a new directory skeleton
 
     $ dust new mynetwork
       - spawning new dust directory skeleton into 'mynetwork.dust' [ ok ]
-      - copying example yaml node configuration files
-        - copying _debian.yaml [ ok ]
-        - copying _default.yaml [ ok ]
-        - copying myhost.yaml [ ok ]
 
-this will create a directory called mynetwork.dust, the nodes, templates and recipes subdirectories and will create some example configuration files in the nodes directory. hop into your new dust directory and see what's going on:
+this will create a directory called mynetwork.dust, the nodes, templates and recipes subdirectories and will copy over example templates and node configurations. hop into your new dust directory and see what's going on:
 
     $ cd mynetwork.dust
 

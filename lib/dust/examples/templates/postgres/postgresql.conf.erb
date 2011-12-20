@@ -1,0 +1,62 @@
+data_directory = '<%= config['data-dir'] %>'
+hba_file = '<%= config['conf-dir'] %>/pg_hba.conf'
+ident_file = '<%= config['conf-dir'] %>/pg_ident.conf'
+
+listen_addresses = '*'
+port = 5432
+ssl = on
+
+% if node['environment'] == 'production'
+max_connections = 200
+% else
+max_connections = 100
+% end
+
+
+% if node['environment'] == 'production'
+shared_buffers = 1152MB			# min 128kB
+work_mem = 12MB				# min 64kB
+maintenance_work_mem = 288MB		# min 1MB
+% else
+shared_buffers = 24MB			# min 128kB
+work_mem = 16MB				# min 64kB
+maintenance_work_mem = 128MB		# min 1MB
+% end
+
+full_page_writes = yes                  # make xfs usage safe
+
+wal_level = hot_standby			# minimal, archive, or hot_standby
+
+% if node['environment'] == 'production'
+wal_buffers = 8MB			# min 32kB
+checkpoint_segments = 16		# in logfile segments, min 1, 16MB each
+checkpoint_completion_target = 0.9	# checkpoint target duration, 0.0 - 1.0
+% else
+#wal_buffers = 64kB			# min 32kB
+#checkpoint_segments = 3		# in logfile segments, min 1, 16MB each
+#checkpoint_completion_target = 0.5	# checkpoint target duration, 0.0 - 1.0
+% end
+
+
+archive_mode = yes
+archive_command = 'cp -i %p <%= config['archive-dir'] %>/%f < /dev/null'
+
+max_wal_senders = 5
+wal_keep_segments = 32
+hot_standby = on
+
+% if node['environment'] == 'production'
+effective_cache_size = 3584MB
+% else
+#effective_cache_size = 128MB
+% end
+
+default_statistics_target = 50		# range 1-10000
+constraint_exclusion = on		# on, off, or partition
+
+datestyle = 'iso, mdy'
+lc_messages = 'en_US.UTF-8'			# locale for system error message
+lc_monetary = 'en_US.UTF-8'			# locale for monetary formatting
+lc_numeric = 'en_US.UTF-8'			# locale for number formatting
+lc_time = 'en_US.UTF-8'				# locale for time formatting
+default_text_search_config = 'pg_catalog.english'

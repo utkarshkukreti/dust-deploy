@@ -1,0 +1,13 @@
+user1:
+  name: Some User
+  email: some.user@gmail.com
+  keys: 
+    - ssh-rsa AAAA....
+
+
+user2:
+  email: otheruser@otherdomain.org
+  keys: 
+    - ssh-rsa AAAA
+    - ssh-rsa AAAA
+

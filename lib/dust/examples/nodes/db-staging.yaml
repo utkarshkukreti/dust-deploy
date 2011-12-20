@@ -1,0 +1,21 @@
+hostname: [ db-1, db-2, db-3-]
+inherits: [ _default, _newrelic ]
+
+recipes:
+  postgres:
+    cluster: main
+    version: 9.1
+    dbuser: 'postgres:postgres'
+
+  iptables:
+    ports:
+      - 22
+      - port: 5432
+        source: 10.13.37.0/24
+        interface: eth1
+        ip-version: 4
+      - port: [ 5404, 5405 ]
+        interface: eth1
+        protocol: udp
+
+  rc_local: blockdev --setra 8192 /dev/vda

@@ -1,0 +1,4 @@
+postmaster:		root
+hostmaster:		root
+root:			your-address
+no-reply:		/dev/null

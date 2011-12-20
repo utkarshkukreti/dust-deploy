@@ -78,19 +78,9 @@ module  Dust
     # creates directory skeleton for a dust setup
     desc 'new <name>', 'creates a dust directory skeleton for your network'
     def new name
-      Dust.print_msg "spawning new dust directory skeleton into '#{name}.dust'"
-      Dir.mkdir "#{name}.dust"
-      Dir.mkdir "#{name}.dust/nodes"
-      Dir.mkdir "#{name}.dust/recipes"
-      Dir.mkdir "#{name}.dust/templates"
+      Dust.print_msg "spawning new dust directory skeleton with examples into '#{name}.dust'"
+      FileUtils.cp_r File.dirname(__FILE__) + '/../lib/dust/examples', "#{name}.dust"
       Dust.print_ok
-
-      Dust.print_msg "copying example yaml node configuration files\n"
-      Dir[File.dirname(__FILE__) + '/../lib/dust/examples/nodes/*.yaml'].each do |file|
-        Dust.print_msg "copying #{File.basename file}", 2
-        FileUtils.cp file, "#{name}.dust/nodes/#{File.basename file}"
-        Dust.print_ok
-      end
     end
 
     private

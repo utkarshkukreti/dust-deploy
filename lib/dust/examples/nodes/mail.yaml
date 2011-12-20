@@ -1,0 +1,7 @@
+hostname: 10.0.0.1
+inherits: [ _default, _debian ]
+
+recipes:
+  aliases: true
+  iptables:
+    ports: [ 22, 25 ]

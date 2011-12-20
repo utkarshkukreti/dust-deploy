@@ -1,0 +1,16 @@
+this is <%= Dust.blue %><%= node['hostname'] %><%= Dust.none %>, a <%= node['domain'] %> <%= node['environment'] %> server
+
+% if node['environment'] == 'production'
+just in case you didn't notice the line above, maybe this cow helps:
+
+ ___________________________________ 
+< <%= Dust.red %>YOU ARE ON A PRODUCTION SERVER!<%= Dust.none %> >
+ -----------------------------------
+<%= Dust.yellow %>
+        \   ^__^
+         \  (oo)\_______
+            (__))\/\
+                ||----w |
+                ||     ||
+<%= Dust.none %>
+% end

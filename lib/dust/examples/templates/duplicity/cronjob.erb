@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# the duplicity password
+export PASSPHRASE=<%= config['passphrase'] %>
+
+mkdir -p <%= config['archive'] %> &> /dev/null
+
+% if config['options'].include?('cleanup')
+# remove old backups
+nice -n <%= config['nice'] %> duplicity remove-all-but-n-full <%= config['keep-n-full'] %> --force \
+  --archive-dir <%= config['archive'] %> \
+  <%= File.join(config['backend'], config['directory']) %> &> /dev/null
+
+# clean up
+nice -n <%= config['nice'] %> duplicity cleanup --force \
+  --archive-dir <%= config['archive'] %> \
+  <%= File.join(config['backend'], config['directory']) %> &> /dev/null
+% end
+
+% if config['options'].include?('postgres-base-backup')
+# make a base backup of the database
+psql -U postgres -c "SELECT pg_start_backup('postgres-base-backup');" &> /dev/null
+% end
+
+% if config['options'].include?('postgres-dump')
+su postgres -c pg_dumpall 2> /dev/null > /root/.postgres-dump-<%= config['interval'] %>
+% end
+
+% if config['options'].include?('mysql-locksync')
+mysql --defaults-file=/etc/mysql/debian.cnf -e "FLUSH TABLES WITH READ LOCK"
+sync; sync; sync
+% end
+
+% if config['options'].include?('ldap-dump')
+# dump ldap database
+/etc/init.d/slapd stop &> /dev/null
+nice -n $NICE slapcat > /root/.ldap-<%= config['interval'] %> &> /dev/null
+/etc/init.d/slapd start &> /dev/null
+% end
+
+# backup selected directories
+nice -n <%= config['nice'] %> duplicity --archive-dir <%= config['archive'] %> \
+  --full-if-older-than <%= config['full-if-older-than'] %> --exclude-device-files / \
+% config['include'].each do |dir|
+  --include <%= dir %> \
+% end
+% config['exclude'].each do |dir|
+  --exclude <%= dir %> \
+% end
+  <%= File.join(config['backend'], config['directory']) %> &> /dev/null
+
+unset PASSPHRASE
+
+% if config['options'].include?('postgres-base-backup')
+# stop backup
+psql -U postgres -c "SELECT pg_stop_backup();" &> /dev/null
+% end
+
+% if config['options'].include?('mysql-locksync')
+mysql --defaults-file=/etc/mysql/debian.cnf -e "UNLOCK TABLES"
+% end

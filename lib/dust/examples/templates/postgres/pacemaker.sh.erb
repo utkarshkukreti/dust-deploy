@@ -1,0 +1,157 @@
+#!/bin/bash
+
+# user as which postgres runs
+PG_USER=<%= config['dbuser'] %>
+
+# path to postgres directory (data and archives)
+PG_DATA=<%= config['data-dir'] %>
+PG_ARCHIVE=<%= config['archive-dir'] %>
+
+# path to recovery.conf (on slaves)
+RECOVERY=$PG_DATA/recovery.conf
+RECOVERY_DONE=$PG_DATA/recovery.done
+
+# path to postgresql init script
+% if node.is_gentoo? true
+PG_INIT=/etc/init.d/postgresql-<%= config['version'] %>
+% else
+PG_INIT=/etc/init.d/postgresql
+% end
+
+# the clustered IP
+DB_MASTER=db-<%= node['environment'] %>-master.<%= node['domain'] %>
+
+
+start() {
+  # get current status
+  status
+
+  # if configured as slave, touch the trigger file
+  # and promote slave to master
+  if [ $? -eq 3 ]; then
+    TRIGGER=$(grep trigger_file $RECOVERY |cut -d\' -f2)
+
+    if [ "$TRIGGER" = "" ]; then
+      echo "no trigger file configured in recover.conf!"
+      return 1
+    fi
+
+    # check if slave runs postgres
+    $PG_INIT status
+    if [ $? -ne 0 ]; then
+      echo "postgresql not running!"
+      return 1
+    fi
+
+    touch $TRIGGER
+  fi 
+
+  return 0
+}
+
+stop() {
+  # if configured as master, stop postgresql
+  if [ ! -e $RECOVERY_DONE ]; then 
+    $PG_INIT stop
+
+    # always return success, because we want pacemaker
+    # to setup a new master no matter what.
+    # return $?
+    return 0
+  fi
+
+  return 0
+}
+
+status() {
+  if [ -e $RECOVERY ]; then
+    echo "postgresql configured as slave"
+    return 3
+  elif [ -e $RECOVERY_DONE ]; then
+    echo "postgres configured as master"
+
+    # check if postgres status is ok, return
+    $PG_INIT status
+    return $?
+  else
+    echo "couldn't determine configuration status"
+    return 1
+  fi
+}
+
+
+resync() {
+    # check if this is a master
+    status
+
+    if [ $? -eq 0 -a -e $RECOVERY_DONE ]; then
+        echo "found recovery.done file, NOT syncing, because this is probably running a master!"
+	echo "if you want to sync, remove $RECOVERY_DONE and try again."
+	return 1
+    fi
+
+    $PG_INIT stop
+
+    # remove old (x)logs
+    rm -r $PG_DATA/pg_xlog $PG_DATA/pg_log $PG_DATA/postmaster.log $PG_DATA/postmaster.pid &> /dev/null
+
+    # start backup mode, sync files, stop backup mode
+    ssh $DB_MASTER "psql -U postgres -c \"SELECT pg_start_backup('automatic-resync', true)\""
+    rsync -aze 'ssh' $DB_MASTER:/$PG_DATA/ $PG_DATA --delete --progress \
+        --exclude pg_xlog --exclude postmaster.pid --exclude pg_log --exclude postmaster.log
+    ssh $DB_MASTER "psql -U postgres -c \"SELECT pg_stop_backup()\""
+
+    # create missing directories, change user
+    mkdir $PG_DATA/pg_log $PG_DATA/pg_xlog
+    chown $PG_USER -R $PG_DATA
+    chmod 700 -R $PG_DATA
+
+    # actually, only the wal files during backup need to be synced
+    # but parsing this out is complicated.
+    mkdir $PG_ARCHIVE &> /dev/null
+    rsync -aze 'ssh' $DB_MASTER:/$PG_ARCHIVE/ $PG_ARCHIVE --delete --progress
+
+    # remove the trigger file
+    TRIGGER=$(grep trigger_file $RECOVERY_DONE |cut -d\' -f2)
+    rm $TRIGGER &> /dev/null
+
+    # activate slave mode
+    mv $RECOVERY_DONE $RECOVERY
+
+    $PG_INIT start
+}
+
+
+case "$1" in
+  start)
+    start
+    exit $?
+    ;;
+
+  stop)
+    stop
+    exit $?
+    ;;
+
+  status)
+    status
+    exit $?
+    ;;
+
+  restart|reload|force-reload)
+    echo "Error: argument '$1' not supported" >&2
+    exit 3
+    ;;
+
+  resync)
+    resync
+    exit 0
+    ;;
+
+  *)
+    echo "Usage: $0 [start|stop|status]" >&2
+    exit 3
+    ;;
+
+esac
+

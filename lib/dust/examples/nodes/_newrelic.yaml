@@ -1,0 +1,10 @@
+recipes:
+  repositories:
+    newrelic:
+      url: "http://apt.newrelic.com/debian/"
+      release: "newrelic"
+      key: "http://download.newrelic.com/548C16BF.gpg"
+      components: "non-free"
+      source: false
+
+  newrelic: "<your new relic key here>"

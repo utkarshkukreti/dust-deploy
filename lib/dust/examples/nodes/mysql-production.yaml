@@ -1,0 +1,10 @@
+hostname: mysql
+inherits: [ _default, _debian ]
+group: mysql
+
+recipes:
+  iptables:
+    ports: [ 22, 3306 ]
+  rc_local: blockdev --setra 8192 /dev/vdc
+  mysql:
+    bind_address: 0.0.0.0

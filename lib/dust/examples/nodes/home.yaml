@@ -1,0 +1,11 @@
+hostname: home
+inherits: [ _default ]
+
+recipes:
+  duplicity:
+    default:
+      passphrase: 'your duplicity passphrase'
+      include: [ /etc/, /root/, /var/log/, /home/ ]
+      archive: /home/.duplicity-tmp
+
+  iptables: disabled

@@ -1,0 +1,129 @@
+# This is config file for zabbix_agentd
+# in case the agent is started standalone from init.d (not via inetd).
+#
+# To get more information about ZABBIX, go http://www.zabbix.com
+
+############ GENERAL PARAMETERS #################
+
+# List of comma delimited IP addresses (or hostnames) of ZABBIX servers. 
+# No spaces allowed. First entry is used for sending active checks.
+# Note that hostnames must resolve hostname->IP address and
+# IP address->hostname.
+
+Server=zabbix.<%= node['domain'] %>
+
+# Server port for sending active checks
+
+#ServerPort=10051
+
+# Unique hostname. Required for active checks.
+
+Hostname=<%= node['fqdn'] %>
+
+# Listen port. Default is 10050
+
+#ListenPort=10050
+
+# IP address to bind agent
+# If missing, bind to all available IPs
+
+#ListenIP=127.0.0.1
+
+# Number of pre-forked instances of zabbix_agentd.
+# Default value is 5
+# This parameter must be between 1 and 16
+
+StartAgents=5
+
+# How often refresh list of active checks. 2 minutes by default.
+
+#RefreshActiveChecks=120
+
+# Disable active checks. The agent will work in passive mode listening server.
+
+#DisableActive=1
+
+# Enable remote commands for ZABBIX agent. By default remote commands disabled.
+
+#EnableRemoteCommands=1
+
+# Specifies debug level
+# 0 - debug is not created
+# 1 - critical information
+# 2 - error information
+# 3 - warnings
+# 4 - information (default)
+# 5 - for debugging (produces lots of information)
+
+DebugLevel=3
+
+# Name of PID file
+
+% if node.uses_apt? true
+PidFile=/var/run/zabbix-agent/zabbix_agentd.pid
+% elsif node.uses_emerge? true
+PidFile=/var/run/zabbix/zabbix_agentd.pid
+% elsif node.uses_rpm? true
+PidFile=/var/run/zabbix/zabbix_agentd.pid
+% end
+
+# Name of log file.
+# If not set, syslog will be used
+
+% if node.uses_apt? true
+LogFile=/var/log/zabbix-agent/zabbix_agentd.log
+% elsif node.uses_emerge? true
+LogFile=/var/log/zabbix/zabbix_agentd.log
+% elsif node.uses_emerge? true
+LogFile=/var/log/zabbix/zabbix_agentd.log
+% end
+
+# Maximum size of log file in MB. Set to 0 to disable automatic log rotation.
+#LogFileSize=1
+
+# Spend no more than Timeout seconds on processing
+# Must be between 1 and 30
+
+Timeout=30
+
+####### USER-DEFINED MONITORED PARAMETERS #######
+# Format: UserParameter=<key>,<shell command>
+# Note that shell command must not return empty string or EOL only
+
+# system updates
+% if node.uses_apt? true
+UserParameter=debian.updates,aptitude search '~U' |wc -l
+UserParameter=debian.security,debsecan --suite squeeze --only-fixed --format packages |wc -l
+
+% elsif node.uses_emerge? true
+UserParameter=gentoo.security,glsa-check -t all 2>/dev/null | wc -l
+UserParameter=gentoo.updates,emerge -uNDp @world | grep ebuild|wc -l
+UserParameter=gentoo.portage,emerge --info| grep 'Timestamp of tree' | sed -e s/'Timestamp of tree':// -e 's/\n//' | xargs -I {} date --date={} +%s |xargs -I {} expr $(date +%s) - {}
+UserParameter=gentoo.config,find /etc/ -name '._cfg*' 2>/dev/null|wc -l
+
+% elsif node.uses_rpm? true
+UserParameter=centos.updates,yum check-update -q |wc -l
+% end
+
+% if node.package_installed?( [ 'postgresql-server', 'postgresql' ], true )
+# postgres
+UserParameter=psql.version,psql --version|head -n1
+UserParameter=psql.server_processes,psql -U zabbix -t -c "select sum(numbackends) from pg_stat_database" postgres
+UserParameter=psql.db_connections,psql -U zabbix -t -c "select count(*) from pg_stat_activity" postgres
+UserParameter=psql.db_fetched,psql -U zabbix -t -c "select sum(tup_fetched) from pg_stat_database" postgres
+UserParameter=psql.db_deleted,psql -U zabbix -t -c "select sum(tup_deleted) from pg_stat_database" postgres
+UserParameter=psql.db_inserted,psql -U zabbix -t -c "select sum(tup_inserted) from pg_stat_database" postgres
+UserParameter=psql.db_returned,psql -U zabbix -t -c "select sum(tup_returned) from pg_stat_database" postgres
+UserParameter=psql.db_updated,psql -U zabbix -t -c "select sum(tup_updated) from pg_stat_database" postgres
+UserParameter=psql.tx_commited,psql -U zabbix -t -c "select sum(xact_commit) from pg_stat_database" postgres
+UserParameter=psql.tx_rolledback,psql -U zabbix -t -c "select sum(xact_rollback) from pg_stat_database" postgres
+UserParameter=psql.blks_hit,psql -U zabbix -t -c "select sum(blks_hit) from pg_stat_database" postgres
+UserParameter=psql.blks_read,psql -U zabbix -t -c "select sum(blks_read) from pg_stat_database" postgres
+% end
+
+% if node.package_installed?('arcconf', true)
+# adaptec raid
+UserParameter=raid.smart_warnings,/sbin/arcconf getconfig 1 pd |grep "S.M.A.R.T. warnings" | awk '{SMART += $4} END {print SMART}'
+UserParameter=raid.disk_rpm,/sbin/arcconf getconfig 1 pd |grep "Power State" |grep -v "Full rpm" |wc -l
+UserParameter=raid.disk_state,/sbin/arcconf getconfig 1 pd |grep "\s\sState" |grep -v "Online" |wc -l
+% end

@@ -2,3 +2,18 @@
 domain: example.com
 port: 22
 user: root
+
+recipes:
+
+  # default duplicity configuration
+  duplicity:
+    default:
+      backend: "--ftp-passive ftp://user:pass@host"
+      interval: daily
+      nice: 10
+      keep-n-full: 5
+      full-if-older-than: 7D
+      archive: /tmp/duplicity
+      include: [ '/etc/', '/root/', '/var/log/' ]
+      exclude: [ "'**'" ]
+      options: [ 'cleanup' ]
