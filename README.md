@@ -61,7 +61,7 @@ you can then save the file, and tell dust to get to work:
        - installing git-core [ ok ]
      - checking if rsync is installed [ ok ]
 
-you should see dust connecting to the node, checking if the requestet packages are installed, and if not, install them.
+you should see dust connecting to the node, checking if the requested packages are installed, and if not, install them.
 dust works with aptitude, yum and emerge systems at the moment (testet with ubuntu, debian, gentoo, scientificlinux, centos).
 feel free to contribute to dust, so that your system is also supported. contribution is easy! just send me a github pull request. You can find the repository here: https://github.com/kechagia/dust-deploy
 
@@ -169,7 +169,7 @@ dust comes with a set of predifined, (almost) ready to use recipes managing a lo
 -   install basic system tools and pushing .configuration files for root
 -   iptables firewall
 -   debian/ubuntu debsecan security notifications
--   debian/ubunto repositories
+-   debian/ubuntu repositories
 -   duplicity backups
 -   mysql server configuration
 -   postgresql server configuration (including corosync scripts)
@@ -182,9 +182,9 @@ dust comes with a set of predifined, (almost) ready to use recipes managing a lo
 writing your own recipes
 ------------
 
-because the above recipes will probably not in all cases fullfill your needs, it's pretty easy to write your own recipes. You can either file them in using a git pull request (if you think it's a generic one which others might use as well), or place them locally in the "recipes" folder in your mynetwork.dust directory.
+because the above recipes will probably not in all cases fulfill your needs, it's pretty easy to write your own recipes. You can either file them in using a git pull request (if you think it's a generic one which others might use as well), or place them locally in the "recipes" folder in your mynetwork.dust directory.
 
-dust comes with a set of predifined functions to perform system taks, which you can (and should!) use.
+dust comes with a set of predefined functions to perform system tasks, which you can (and should!) use.
 
 ### the server.rb methods you can (and should!) use
 
